@@ -1,0 +1,105 @@
+version: "3"
+services:
+    plex:
+        image: lscr.io/linuxserver/plex:latest
+        container_name: plex
+        network_mode: host # Change this to bridge if you don't want Plex to run on your host network.
+        environment:
+            - PUID=${PUID}
+            - PGID=${PGID}
+            - TZ=${TZ}
+            - VERSION=docker
+        volumes:
+            - ${PLEX_CONFIG_VOLUME}:/config
+            - ${TV_SERIES_VOLUME}:/tv
+            - ${MOVIES_VOLUME}:/movies
+        restart: unless-stopped
+
+    qbittorrent:
+        image: lscr.io/linuxserver/qbittorrent:latest
+        container_name: qbittorrent
+        environment:
+            - PUID=${PUID}
+            - PGID=${PGID}
+            - TZ=${TZ_QBITTORRENT}
+            - WEBUI_PORT=8089
+            - TORRENTING_PORT=6881
+        volumes:
+            - ${QBITTORRENT_CONFIG_VOLUME}:/config
+            - ${DOWNLOADS_VOLUME}:/downloads
+        ports:
+            - 8089:8089
+            - 6881:6881
+            - 6881:6881/udp
+        restart: unless-stopped
+
+    sonarr:
+        image: lscr.io/linuxserver/sonarr:latest
+        container_name: sonarr
+        environment:
+            - PUID=${PUID}
+            - PGID=${PGID}
+            - TZ=${TZ}
+        volumes:
+            - ${SONARR_CONFIG_VOLUME}:/config
+            - ${TV_SERIES_VOLUME}:/tv
+            - ${DOWNLOADS_VOLUME}:/downloads
+        ports:
+            - 8989:8989
+        restart: unless-stopped
+
+    radarr:
+        image: lscr.io/linuxserver/radarr:latest
+        container_name: radarr
+        environment:
+            - PUID=${PUID}
+            - PGID=${PGID}
+            - TZ=${TZ}
+        volumes:
+            - ${RADARR_CONFIG_VOLUME}:/config
+            - ${MOVIES_VOLUME}:/movies
+            - ${DOWNLOADS_VOLUME}:/downloads
+        ports:
+            - 7878:7878
+        restart: unless-stopped
+
+    jackett:
+        image: lscr.io/linuxserver/jackett:latest
+        container_name: jackett
+        environment:
+            - PUID=${PUID}
+            - PGID=${PGID}
+            - TZ=${TZ}
+            - AUTO_UPDATE=true
+        volumes:
+            - ${JACKETT_CONFIG_VOLUME}:/config
+            - ${DOWNLOADS_VOLUME}:/downloads
+        ports:
+            - 9117:9117
+        restart: unless-stopped
+
+    overseerr:
+        image: lscr.io/linuxserver/overseerr:latest
+        container_name: overseerr
+        environment:
+            - PUID=${PUID}
+            - PGID=${PGID}
+            - TZ=${TZ}
+        volumes:
+            - ${OVERSEERR_CONFIG_VOLUME}:/config
+        ports:
+            - 5055:5055
+        restart: unless-stopped
+
+    prowlarr:
+        image: lscr.io/linuxserver/prowlarr:latest
+        container_name: prowlarr
+        environment:
+            - PUID=${PUID}
+            - PGID=${PGID}
+            - TZ=${TZ}
+        volumes:
+            - ${PROWLARR_CONFIG_VOLUME}:/config
+        ports:
+            - 9696:9696
+        restart: unless-stopped
