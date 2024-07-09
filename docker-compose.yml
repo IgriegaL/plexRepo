@@ -21,7 +21,7 @@ services:
         environment:
             - PUID=${PUID}
             - PGID=${PGID}
-            - TZ=${TZ_QBITTORRENT}
+            - TZ=${TZ}
             - WEBUI_PORT=8089
             - TORRENTING_PORT=6881
         volumes:
