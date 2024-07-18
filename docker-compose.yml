@@ -15,6 +15,25 @@ services:
             - ${MOVIES_VOLUME}:/movies
         restart: unless-stopped
 
+    # Alternativa a Plex
+    
+    emby:
+        image: lscr.io/linuxserver/emby:latest
+        container_name: emby
+        environment:
+        - PUID=1001
+        - PGID=1001
+        - TZ=${TZ}
+        volumes:
+        - /mnt/DiscoDuro/EmbyConfig:/config
+        - ${TV_SERIES_VOLUME}:/tv
+        - ${MOVIES_VOLUME}:/movies
+        ports:
+        - 8096:8096 # HTTP port
+        - 8920:8920 # HTTPS port
+        restart: unless-stopped
+
+
     qbittorrent:
         image: lscr.io/linuxserver/qbittorrent:latest
         container_name: qbittorrent
@@ -32,6 +51,10 @@ services:
             - 6881:6881
             - 6881:6881/udp
         restart: unless-stopped
+        deploy:
+            resources:
+                limits:
+                    cpus: '0.2'
 
     sonarr:
         image: lscr.io/linuxserver/sonarr:latest
