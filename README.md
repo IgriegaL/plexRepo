@@ -42,7 +42,7 @@ docker-compose up -d
 ```
 
 This will download the necessary Docker images and start the containers in the background.
-
+```env
 Included Services
 Plex: Media server to organize and stream your movies and TV shows.
 Emby: Alternative to Plex for organizing and streaming your media.
@@ -63,10 +63,10 @@ Overseerr: 5055
 Prowlarr: 9696
 Automatic Restart
 The containers are configured to restart automatically unless stopped manually (restart: unless-stopped).
-
-Resources
-Docker
-Docker Compose
-LinuxServer.io
-Contributions
+```
+## Resources
+- Docker
+-Docker Compose
+-LinuxServer.io
+## Contributions
 Contributions are welcome. Please open an issue or a pull request to discuss any changes.
