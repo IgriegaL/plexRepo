@@ -39,7 +39,7 @@ To start the services, run the following command in the root directory of the pr
 
 ```sh
 docker-compose up -d
-
+```
 
 This will download the necessary Docker images and start the containers in the background.
 
