@@ -39,3 +39,34 @@ To start the services, run the following command in the root directory of the pr
 
 ```sh
 docker-compose up -d
+
+
+This will download the necessary Docker images and start the containers in the background.
+
+Included Services
+Plex: Media server to organize and stream your movies and TV shows.
+Emby: Alternative to Plex for organizing and streaming your media.
+qBittorrent: BitTorrent client for downloading files.
+Sonarr: TV series manager.
+Radarr: Movie manager.
+Jackett: Proxy for torrent indexers.
+Overseerr: Tool for managing content requests.
+Prowlarr: Indexer manager for Sonarr and Radarr.
+Ports
+Plex: Depends on network configuration.
+Emby: HTTP 8096, HTTPS 8920
+qBittorrent: WebUI 8089, Torrenting 6881
+Sonarr: 8989
+Radarr: 7878
+Jackett: 9117
+Overseerr: 5055
+Prowlarr: 9696
+Automatic Restart
+The containers are configured to restart automatically unless stopped manually (restart: unless-stopped).
+
+Resources
+Docker
+Docker Compose
+LinuxServer.io
+Contributions
+Contributions are welcome. Please open an issue or a pull request to discuss any changes.
