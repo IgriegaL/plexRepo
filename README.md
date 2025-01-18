@@ -13,8 +13,8 @@ This project sets up a media server using Docker Compose. It includes services l
 2. Create a `.env` file in the root directory of the project with the following content:
 
     ```env
-    PUID=1001
-    PGID=1001
+    PUID={yourId or root}
+    PGID={yourId or root}
     TZ=Chile/Continental
 
     # Replace with directory on your system : mnt/DiscoDuro
