@@ -12,6 +12,12 @@ This project sets up a media server using Docker Compose. It includes services l
 1. Clone this repository to your local machine.
 2. Create a `.env` file in the root directory of the project with the following content:
 
+    * Add these permissions to your user ID:
+      ```sh
+      sudo chmod -R 777 /root/plex /mnt/DiscoDuro/tvserie /mnt/DiscoDuro/movies /mnt/DiscoDuro/qbittorrent/appdata /mnt/DiscoDuro/downloads /mnt/DiscoDuro/sonarr /mnt/DiscoDuro/pvr/radarr /mnt/DiscoDuro/jackett /mnt/DiscoDuro/opt/pvr/overseerr /mnt/DiscoDuro/prowlarr
+      ```
+
+
     ```env
     PUID={yourId or root}
     PGID={yourId or root}
