@@ -4,7 +4,7 @@ services:
         image: lscr.io/linuxserver/plex:latest
         container_name: plex
         network_mode: host
-        user: "0:0"  # Ejecutar como root
+        user: "root"
         environment:
             - PUID={PUID}
             - PGID={PGID}
@@ -18,7 +18,7 @@ services:
     emby:
         image: lscr.io/linuxserver/emby:latest
         container_name: emby
-        user: "0:0"  # Ejecutar como root
+        user: "root"
         environment:
             - PUID={PUID}
             - PGID={PGID}
@@ -35,7 +35,7 @@ services:
     qbittorrent:
         image: lscr.io/linuxserver/qbittorrent:latest
         container_name: qbittorrent
-        user: "0:0"  # Ejecutar como root
+        user: "root"
         environment:
             - PUID={PUID}
             - PGID={PGID}
@@ -54,7 +54,7 @@ services:
     sonarr:
         image: lscr.io/linuxserver/sonarr:latest
         container_name: sonarr
-        user: "0:0"  # Ejecutar como root
+        user: "root"
         environment:
             - PUID={PUID}
             - PGID={PGID}
@@ -70,7 +70,7 @@ services:
     radarr:
         image: lscr.io/linuxserver/radarr:latest
         container_name: radarr
-        user: "0:0"  # Ejecutar como root
+        user: "root"
         environment:
             - PUID={PUID}
             - PGID={PGID}
@@ -86,7 +86,7 @@ services:
     jackett:
         image: lscr.io/linuxserver/jackett:latest
         container_name: jackett
-        user: "0:0"  # Ejecutar como root
+        user: "root"
         environment:
             - PUID={PUID}
             - PGID={PGID}
@@ -102,7 +102,7 @@ services:
     overseerr:
         image: lscr.io/linuxserver/overseerr:latest
         container_name: overseerr
-        user: "0:0"  # Ejecutar como root
+        user: "root"
         environment:
             - PUID={PUID}
             - PGID={PGID}
@@ -116,7 +116,7 @@ services:
     prowlarr:
         image: lscr.io/linuxserver/prowlarr:latest
         container_name: prowlarr
-        user: "0:0"  # Ejecutar como root
+        user: "root"
         environment:
             - PUID={PUID}
             - PGID={PGID}
