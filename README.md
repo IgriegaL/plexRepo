@@ -1,6 +1,6 @@
 # Media Server Setup
 
-This project sets up a media server using Docker Compose. It includes services like Plex, Emby, qBittorrent, Sonarr, Radarr, Jackett, Overseerr, and Prowlarr.
+This project sets up a media server using Docker Compose. It includes services like Plex, Emby, qBittorrent, Sonarr, Radarr, Jackett, Overseerr, Prowlarr, and Bazarr.
 
 ## Requirements
 
@@ -14,9 +14,8 @@ This project sets up a media server using Docker Compose. It includes services l
 
     * Add these permissions to your user ID:
       ```sh
-      sudo chmod -R 777 /root/plex /mnt/DiscoDuro/tvserie /mnt/DiscoDuro/movies /mnt/DiscoDuro/qbittorrent/appdata /mnt/DiscoDuro/downloads /mnt/DiscoDuro/sonarr /mnt/DiscoDuro/pvr/radarr /mnt/DiscoDuro/jackett /mnt/DiscoDuro/opt/pvr/overseerr /mnt/DiscoDuro/prowlarr
+      sudo chmod -R 777 /root/plex /mnt/DiscoDuro/tvserie /mnt/DiscoDuro/movies /mnt/DiscoDuro/qbittorrent/appdata /mnt/DiscoDuro/downloads /mnt/DiscoDuro/sonarr /mnt/DiscoDuro/pvr/radarr /mnt/DiscoDuro/jackett /mnt/DiscoDuro/opt/pvr/overseerr /mnt/DiscoDuro/prowlarr /mnt/DiscoDuro/bazarr
       ```
-
 
     ```env
     PUID={yourId or root}
@@ -35,9 +34,10 @@ This project sets up a media server using Docker Compose. It includes services l
     JACKETT_CONFIG_VOLUME=/mnt/DiscoDuro/jackett
     OVERSEERR_CONFIG_VOLUME=/mnt/DiscoDuro/opt/pvr/overseerr
     PROWLARR_CONFIG_VOLUME=/mnt/DiscoDuro/prowlarr
+    BAZARR_CONFIG_VOLUME=/mnt/DiscoDuro/bazarr
     ```
 
-3. Modify the paths in the [.env](http://_vscodecontentref_/0) file to match the directories on your system.
+3. Modify the paths in the [.env](http://_vscodecontentref_/1) file to match the directories on your system.
 
 ## Usage
 
@@ -45,34 +45,3 @@ To start the services, run the following command in the root directory of the pr
 
 ```sh
 docker-compose up -d
-```
-
-This will download the necessary Docker images and start the containers in the background.
-```env
-Included Services
-Plex: Media server to organize and stream your movies and TV shows.
-Emby: Alternative to Plex for organizing and streaming your media.
-qBittorrent: BitTorrent client for downloading files.
-Sonarr: TV series manager.
-Radarr: Movie manager.
-Jackett: Proxy for torrent indexers.
-Overseerr: Tool for managing content requests.
-Prowlarr: Indexer manager for Sonarr and Radarr.
-Ports
-Plex: Depends on network configuration.
-Emby: HTTP 8096, HTTPS 8920
-qBittorrent: WebUI 8089, Torrenting 6881
-Sonarr: 8989
-Radarr: 7878
-Jackett: 9117
-Overseerr: 5055
-Prowlarr: 9696
-Automatic Restart
-The containers are configured to restart automatically unless stopped manually (restart: unless-stopped).
-```
-## Resources
-- Docker
--Docker Compose
--LinuxServer.io
-## Contributions
-Contributions are welcome. Please open an issue or a pull request to discuss any changes.
