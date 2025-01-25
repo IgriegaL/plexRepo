@@ -1,5 +1,21 @@
 version: "3"
 services:
+    bazarr:
+        image: lscr.io/linuxserver/bazarr:latest
+        container_name: bazarr
+        network_mode: host
+        environment:
+            - PUID={PUID}
+            - PGID={PGID}
+            - TZ=Chile/Continental
+        volumes:
+        - ${BAZARR_CONFIG_VOLUME}:/config
+        - ${PLEX_CONFIG_VOLUME}:/config
+        - ${TV_SERIES_VOLUME}:/tv
+        - ${MOVIES_VOLUME}:/movies
+        ports:
+        - 6767:6767
+        restart: unless-stopped
     plex:
         image: lscr.io/linuxserver/plex:latest
         container_name: plex
