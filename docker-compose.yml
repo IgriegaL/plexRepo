@@ -29,22 +29,6 @@ services:
             - ${MOVIES_VOLUME}:/movies
         restart: unless-stopped
 
-    emby:
-        image: lscr.io/linuxserver/emby:latest
-        container_name: emby
-        environment:
-            - PUID={PUID}
-            - PGID={PGID}
-            - TZ=Chile/Continental
-        volumes:
-            - /mnt/DiscoDuro/EmbyConfig:/config
-            - ${TV_SERIES_VOLUME}:/tv
-            - ${MOVIES_VOLUME}:/movies
-        ports:
-            - 8096:8096
-            - 8920:8920
-        restart: unless-stopped
-
     qbittorrent:
         image: lscr.io/linuxserver/qbittorrent:latest
         container_name: qbittorrent
