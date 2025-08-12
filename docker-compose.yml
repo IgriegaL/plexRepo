@@ -121,13 +121,13 @@ services:
         image: lscr.io/linuxserver/jellyfin:latest
         container_name: jellyfin
         environment:
-        - PUID={PUID}
-        - PGID={PGID}
-        - TZ=Chile/Continental
+            - PUID=${PUID}
+            - PGID=${PGID}
+            - TZ=${TZ}
         volumes:
-        - ${JELLYFIN_CONFIG_VOLUME}:/config
-        - ${TV_SERIES_VOLUME}:/data/tvshows
-        - ${MOVIES_VOLUME}:/data/movies
+            - ${JELLYFIN_CONFIG_VOLUME}:/config
+            - ${TV_SERIES_VOLUME}:/data/tvshows
+            - ${MOVIES_VOLUME}:/data/movies
         ports:
-        - 8096:8096
+            - 8096:8096
         restart: unless-stopped
