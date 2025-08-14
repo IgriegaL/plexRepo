@@ -51,8 +51,8 @@ services:
       - 6881:6881
       - 6881:6881/udp
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 1g
+    cpus: 0.8
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
