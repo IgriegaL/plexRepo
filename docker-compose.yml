@@ -32,6 +32,7 @@ services:
       - ${PLEX_CONFIG_VOLUME}:/config
       - ${TV_SERIES_VOLUME}:/tv
       - ${MOVIES_VOLUME}:/movies
+      - ${MOVIES_VOLUME_4k}:/movies4k
     restart: unless-stopped
     mem_limit: 1g
     cpus: 0.8
