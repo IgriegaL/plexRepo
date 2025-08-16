@@ -138,6 +138,7 @@ services:
   # ------------------- Monitoreo -------------------
   cadvisor:
     image: gcr.io/google-containers/cadvisor:latest
+    platform: linux/arm64
     container_name: cadvisor
     ports:
       - 8080:8080
