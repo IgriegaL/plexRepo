@@ -137,9 +137,8 @@ services:
 
   # ------------------- Monitoreo -------------------
   cadvisor:
-    image: ghcr.io/google/cadvisor:latest
+    image: quay.io/google/cadvisor:latest
     container_name: cadvisor
-    platform: linux/arm64
     ports:
       - 8080:8080
     volumes:
@@ -148,8 +147,6 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     restart: unless-stopped
-    networks:
-      - monitoring
 
   node_exporter:
     image: prom/node-exporter:latest
