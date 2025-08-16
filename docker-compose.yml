@@ -137,7 +137,7 @@ services:
 
   # ------------------- Monitoreo -------------------
   cadvisor:
-    image: ghcr.io/google/cadvisor/cadvisor:v0.48.0
+    image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
     ports:
       - 8080:8080
