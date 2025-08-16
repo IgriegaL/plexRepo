@@ -6,9 +6,15 @@ scrape_configs:
   # ------------------- Node Exporter -------------------
   - job_name: 'node_exporter'
     static_configs:
-      - targets: ['host.docker.internal:9100', 'localhost:9100']
+      - targets: ['node_exporter:9100']
 
   # ------------------- cAdvisor -------------------
   - job_name: 'cadvisor'
     static_configs:
       - targets: ['cadvisor:8080']
+
+  # ------------------- Docker daemons (opcional) -------------------
+  # Si quieres monitorear los contenedores Docker directamente
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['localhost:9323']

@@ -8,10 +8,10 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Chile/Continental
+      - TZ=${TZ}
     volumes:
       - ${BAZARR_CONFIG_VOLUME}:/config
-      - ${PLEX_CONFIG_VOLUME}:/config
+      - ${PLEX_CONFIG_VOLUME}:/plex
       - ${TV_SERIES_VOLUME}:/tv
       - ${MOVIES_VOLUME}:/movies
     ports:
@@ -27,7 +27,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Chile/Continental
+      - TZ=${TZ}
     volumes:
       - ${PLEX_CONFIG_VOLUME}:/config
       - ${TV_SERIES_VOLUME}:/tv
@@ -42,7 +42,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Chile/Continental
+      - TZ=${TZ}
       - WEBUI_PORT=8089
       - TORRENTING_PORT=6881
     volumes:
@@ -60,7 +60,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Chile/Continental
+      - TZ=${TZ}
     volumes:
       - ${SONARR_CONFIG_VOLUME}:/config
       - ${TV_SERIES_VOLUME}:/tv
@@ -77,7 +77,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Chile/Continental
+      - TZ=${TZ}
     volumes:
       - ${RADARR_CONFIG_VOLUME}:/config
       - ${MOVIES_VOLUME}:/movies
@@ -94,7 +94,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Chile/Continental
+      - TZ=${TZ}
       - AUTO_UPDATE=true
     volumes:
       - ${JACKETT_CONFIG_VOLUME}:/config
@@ -111,7 +111,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Chile/Continental
+      - TZ=${TZ}
     volumes:
       - ${OVERSEERR_CONFIG_VOLUME}:/config
     ports:
@@ -126,7 +126,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Chile/Continental
+      - TZ=${TZ}
     volumes:
       - ${PROWLARR_CONFIG_VOLUME}:/config
     ports:
