@@ -137,7 +137,7 @@ services:
 
   # ------------------- Monitoreo -------------------
   cadvisor:
-    image: quay.io/google/cadvisor:latest
+    image: lsiobase/cadvisor:arm64
     container_name: cadvisor
     ports:
       - 8080:8080
