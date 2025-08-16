@@ -14,7 +14,7 @@ This project sets up a media server using Docker Compose. It includes services l
 
     * Add these permissions to your user ID:
       ```sh
-      sudo chmod -R 777 /root/plex /mnt/DiscoDuro/tvserie /mnt/DiscoDuro/movies /mnt/DiscoDuro/qbittorrent/appdata /mnt/DiscoDuro/downloads /mnt/DiscoDuro/sonarr /mnt/DiscoDuro/pvr/radarr /mnt/DiscoDuro/jackett /mnt/DiscoDuro/opt/pvr/overseerr /mnt/DiscoDuro/prowlarr /mnt/DiscoDuro/bazarr
+      sudo chmod -R 777 /root/plex /mnt/nvme/docker-volumes/sonarr /mnt/nvme/docker-volumes/radarr /mnt/nvme/docker-volumes/bazarr /mnt/nvme/docker-volumes/jackett /mnt/nvme/docker-volumes/prowlarr /mnt/nvme/docker-volumes/overseerr /mnt/nvme/docker-volumes/qbittorrent /mnt/DiscoDuro/tvserie /mnt/DiscoDuro/movies /mnt/DiscoDuro/downloads
       ```
 
     ```env
