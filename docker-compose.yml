@@ -139,25 +139,29 @@ services:
   cadvisor:
     image: gcr.io/google-containers/cadvisor:latest
     container_name: cadvisor
+    ports:
+      - 8080:8080
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
-    ports:
-      - 8080:8080
     restart: unless-stopped
+    networks:
+      - monitoring
 
   node_exporter:
     image: prom/node-exporter:latest
     container_name: node_exporter
-    network_mode: "host"
-    pid: "host"
-    restart: unless-stopped
+    ports:
+      - 9100:9100
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
+    restart: unless-stopped
+    networks:
+      - monitoring
 
   prometheus:
     image: prom/prometheus:latest
@@ -168,6 +172,8 @@ services:
     ports:
       - 9090:9090
     restart: unless-stopped
+    networks:
+      - monitoring
 
   grafana:
     image: grafana/grafana:latest
@@ -180,9 +186,18 @@ services:
     restart: unless-stopped
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
+    networks:
+      - monitoring
 
 volumes:
   grafana_data:
   prometheus_data:
+
+networks:
+  monitoring:
+    driver: bridge
