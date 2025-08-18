@@ -5,7 +5,7 @@ services:
   plex:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
-    network_mode: host
+    network_mode: bridge
     environment:
       - PGID=${PGID}
       - PUID=${PUID}
@@ -14,6 +14,14 @@ services:
       - ${PLEX_CONFIG_VOLUME}:/config
       - ${TV_SERIES_VOLUME}:/tv
       - ${MOVIES_VOLUME}:/movies
+    ports:
+      - "32400:32400"
+      - "1900:1900/udp"   
+      - "32469:32469"     
+      - "32410:32410/udp" 
+      - "32412:32412/udp"
+      - "32413:32413/udp"
+      - "32414:32414/udp"
     restart: unless-stopped
     mem_limit: 1g
     cpus: 0.8
