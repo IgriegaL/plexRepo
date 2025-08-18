@@ -2,6 +2,39 @@ version: "3.9"
 
 services:
   # ------------------- Mediacenter -------------------
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
+      - TZ=${TZ}
+    volumes:
+      - ${PLEX_CONFIG_VOLUME}:/config
+      - ${TV_SERIES_VOLUME}:/tv
+      - ${MOVIES_VOLUME}:/movies
+    restart: unless-stopped
+    mem_limit: 1g
+    cpus: 0.8
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+        - PUID=${PUID}
+        - PGID=${PGID}
+        - TZ=${TZ}
+    volumes:
+        - ${JELLYFIN_CONFIG_VOLUME}:/config
+        - ${TV_SERIES_VOLUME}:/data/tvshows
+        - ${MOVIES_VOLUME}:/data/movies
+    ports:
+        - 8096:8096
+    restart: unless-stopped
+    mem_limit: 1g
+    cpus: 0.8
+
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
@@ -19,23 +52,6 @@ services:
     restart: unless-stopped
     mem_limit: 512m
     cpus: 0.5
-
-  plex:
-    image: lscr.io/linuxserver/plex:latest
-    container_name: plex
-    network_mode: host
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${PLEX_CONFIG_VOLUME}:/config
-      - ${TV_SERIES_VOLUME}:/tv
-      - ${MOVIES_VOLUME}:/movies
-      - ${MOVIES_VOLUME_4k}:/movies4k
-    restart: unless-stopped
-    mem_limit: 1g
-    cpus: 0.8
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
