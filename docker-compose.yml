@@ -16,33 +16,32 @@ services:
       - ${MOVIES_VOLUME}:/movies
     ports:
       - "32400:32400"
-      - "1900:1900/udp"   
-      - "32469:32469"     
-      - "32410:32410/udp" 
-      - "32412:32412/udp"
-      - "32413:32413/udp"
-      - "32414:32414/udp"
+      - "1900:1900/udp"
+      - "32469:32469"
+      - "32410-32414:32410-32414/udp"
     restart: unless-stopped
-    mem_limit: 1g
-    cpus: 0.8
-
+    mem_limit: 2g        
+    cpus: 1              
+    devices:             
+      - /dev/dri:/dev/dri
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
     environment:
-        - PUID=${PUID}
-        - PGID=${PGID}
-        - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-        - ${JELLYFIN_CONFIG_VOLUME}:/config
-        - ${TV_SERIES_VOLUME}:/data/tvshows
-        - ${MOVIES_VOLUME}:/data/movies
+      - ${JELLYFIN_CONFIG_VOLUME}:/config
+      - ${TV_SERIES_VOLUME}:/data/tvshows
+      - ${MOVIES_VOLUME}:/data/movies
     ports:
-        - 8096:8096
+      - "8096:8096"
     restart: unless-stopped
-    mem_limit: 1g
-    cpus: 0.8
-
+    mem_limit: 2g
+    cpus: 1
+    devices:
+      - /dev/dri:/dev/dri
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
