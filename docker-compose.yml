@@ -5,43 +5,40 @@ services:
   plex:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
-    network_mode: bridge
+    network_mode: "host"
     environment:
       - PGID=${PGID}
       - PUID=${PUID}
       - TZ=${TZ}
+      - PLEX_CLAIM=${PLEX_CLAIM}
     volumes:
-      - ${PLEX_CONFIG_VOLUME}:/config
+      - /mnt/nvme/plex_config:/config
       - ${TV_SERIES_VOLUME}:/tv
       - ${MOVIES_VOLUME}:/movies
-    ports:
-      - "32400:32400"
-      - "1900:1900/udp"
-      - "32469:32469"
-      - "32410-32414:32410-32414/udp"
     restart: unless-stopped
-    mem_limit: 2g        
-    cpus: 1              
-    devices:             
-      - /dev/dri:/dev/dri
+    mem_limit: 1.5g
+    cpus: 1
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
+    network_mode: "host"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - ${JELLYFIN_CONFIG_VOLUME}:/config
+      - /mnt/nvme/jellyfin_config:/config
       - ${TV_SERIES_VOLUME}:/data/tvshows
       - ${MOVIES_VOLUME}:/data/movies
-    ports:
-      - "8096:8096"
     restart: unless-stopped
-    mem_limit: 2g
+    mem_limit: 1.5g
     cpus: 1
     devices:
-      - /dev/dri:/dev/dri
+      - /dev/dri/renderD128:/dev/dri/renderD128
+
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
@@ -50,15 +47,15 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - ${BAZARR_CONFIG_VOLUME}:/config
-      - ${PLEX_CONFIG_VOLUME}:/plex
+      - /mnt/nvme/bazarr_config:/config
+      - /mnt/nvme/plex_config:/plex
       - ${TV_SERIES_VOLUME}:/tv
       - ${MOVIES_VOLUME}:/movies
     ports:
       - 6767:6767
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 256m
+    cpus: 0.25
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -70,13 +67,15 @@ services:
       - WEBUI_PORT=8089
       - TORRENTING_PORT=6881
     volumes:
-      - ${QBITTORRENT_CONFIG_VOLUME}:/config
+      - /mnt/nvme/qbittorrent_config:/config
       - ${DOWNLOADS_VOLUME}:/downloads
     ports:
       - 8089:8089
       - 6881:6881
       - 6881:6881/udp
     restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.25
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
@@ -86,14 +85,14 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - ${SONARR_CONFIG_VOLUME}:/config
+      - /mnt/nvme/sonarr_config:/config
       - ${TV_SERIES_VOLUME}:/tv
       - ${DOWNLOADS_VOLUME}:/downloads
     ports:
       - 8989:8989
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 256m
+    cpus: 0.25
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -103,14 +102,14 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - ${RADARR_CONFIG_VOLUME}:/config
+      - /mnt/nvme/radarr_config:/config
       - ${MOVIES_VOLUME}:/movies
       - ${DOWNLOADS_VOLUME}:/downloads
     ports:
       - 7878:7878
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 256m
+    cpus: 0.25
 
   jackett:
     image: lscr.io/linuxserver/jackett:latest
@@ -121,13 +120,13 @@ services:
       - TZ=${TZ}
       - AUTO_UPDATE=true
     volumes:
-      - ${JACKETT_CONFIG_VOLUME}:/config
+      - /mnt/nvme/jackett_config:/config
       - ${DOWNLOADS_VOLUME}:/downloads
     ports:
       - 9117:9117
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 256m
+    cpus: 0.25
 
   overseerr:
     image: lscr.io/linuxserver/overseerr:latest
@@ -137,12 +136,12 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - ${OVERSEERR_CONFIG_VOLUME}:/config
+      - /mnt/nvme/overseerr_config:/config
     ports:
       - 5055:5055
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 256m
+    cpus: 0.25
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -152,12 +151,12 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - ${PROWLARR_CONFIG_VOLUME}:/config
+      - /mnt/nvme/prowlarr_config:/config
     ports:
       - 9696:9696
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 256m
+    cpus: 0.25
 
   # ------------------- Monitoreo -------------------
   cadvisor:
@@ -171,6 +170,9 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.25
+
   node_exporter:
     image: prom/node-exporter:latest
     container_name: node_exporter
@@ -183,6 +185,8 @@ services:
     restart: unless-stopped
     networks:
       - monitoring
+    mem_limit: 128m
+    cpus: 0.1
 
   prometheus:
     image: prom/prometheus:latest
@@ -195,6 +199,8 @@ services:
     restart: unless-stopped
     networks:
       - monitoring
+    mem_limit: 512m
+    cpus: 0.25
 
   grafana:
     image: grafana/grafana:latest
@@ -214,6 +220,8 @@ services:
       - prometheus
     networks:
       - monitoring
+    mem_limit: 512m
+    cpus: 0.25
 
 volumes:
   grafana_data:
