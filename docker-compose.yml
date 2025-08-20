@@ -26,26 +26,6 @@ services:
     devices:
       - /dev/dri:/dev/dri
 
-  jellyfin:
-    image: lscr.io/linuxserver/jellyfin:latest
-    container_name: jellyfin
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${JELLYFIN_CONFIG_VOLUME}:/config
-      - ${TV_SERIES_VOLUME}:/data/tvshows
-      - ${MOVIES_VOLUME}:/data/movies
-      - ${HDD_CACHE_JELLYFIN}:/cache
-    ports:
-      - "8096:8096"
-    restart: unless-stopped
-    mem_limit: 2g
-    cpus: 1
-    devices:
-      - /dev/dri:/dev/dri
-
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
