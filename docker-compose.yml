@@ -22,9 +22,7 @@ services:
       - "32410-32414:32410-32414/udp"
     restart: unless-stopped
     mem_limit: 2g
-    cpus: 1
-    devices:
-      - /dev/dri:/dev/dri
+    cpus: 3
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
@@ -63,7 +61,7 @@ services:
       - 6881:6881
       - 6881:6881/udp
     restart: unless-stopped
-    mem_limit: 512m
+    mem_limit: 2gb
     cpus: 0.5
 
   sonarr:
