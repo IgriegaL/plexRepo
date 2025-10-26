@@ -461,6 +461,12 @@ docker exec promtail wget -O- http://loki:3100/ready
 
 # Reiniciar servicios
 docker-compose -f docker-compose.security.yml restart loki promtail
+
+> Nota: En algunas instalaciones se ha eliminado Loki/Promtail del `docker-compose.security.yml` porque no se
+> usaba el sistema de logs centralizado y provocaba conflictos de montaje/puertos (por ejemplo `loki/loki-config.yml`
+> siendo accidentalmente un directorio o puertos ocupados). Si necesitas reactivar Loki/Promtail, restaura sus
+> bloques en `docker-compose.security.yml` y `docker-compose.security-arm64.yml` y asegúrate de que los archivos
+> `./loki/loki-config.yml` y `./promtail/promtail-config.yml` existan como archivos YAML regulares.
 ```
 
 ---

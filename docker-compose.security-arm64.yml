@@ -1,5 +1,3 @@
-version: "3.9"
-
 # Servicios de Seguridad - Versión ARM64 Compatible
 # Uso: docker compose -f docker-compose.yml -f docker-compose.security-arm64.yml up -d
 
@@ -76,47 +74,8 @@ services:
   # Alternativa: Usar análisis en la nube o herramientas específicas de ARM
 
   # ------------------- Logs Centralizados -------------------
-  loki:
-    image: grafana/loki:latest
-    container_name: loki
-    restart: unless-stopped
-    ports:
-      - "3100:3100"
-    volumes:
-      - ./loki:/loki
-      - ./loki/loki-config.yml:/etc/loki/local-config.yaml
-    command: -config.file=/etc/loki/local-config.yaml
-    networks:
-      - monitoring
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/ready"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  promtail:
-    image: grafana/promtail:latest
-    container_name: promtail
-    restart: unless-stopped
-    volumes:
-      - /var/log:/var/log:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - ./promtail/promtail-config.yml:/etc/promtail/config.yml
-    command: -config.file=/etc/promtail/config.yml
-    networks:
-      - monitoring
-    depends_on:
-      - loki
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+  # Loki and Promtail removed for ARM64 deployments to avoid mount/port conflicts.
+  # Re-enable by restoring the service blocks and verifying the config files exist as regular files.
 
 # ------------------- Secrets -------------------
 secrets:

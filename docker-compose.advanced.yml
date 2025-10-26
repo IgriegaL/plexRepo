@@ -1,5 +1,3 @@
-version: "3.9"
-
 # Servicios avanzados opcionales
 # Para usar: docker-compose -f docker-compose.yml -f docker-compose.advanced.yml up -d
 
