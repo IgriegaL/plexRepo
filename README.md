@@ -245,10 +245,10 @@ docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-co
 2. **Si tu servidor es ARM64** (Raspberry Pi, Oracle Cloud ARM, etc.):
    ```bash
    # Verificar arquitectura
-   uname -m  # Si muestra aarch64 o arm64, usa el archivo ARM64
+   uname -m  # Si muestra aarch64 o arm64, usa los archivos ARM64
    
    # Usar versión compatible con ARM64
-   docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml -f docker-compose.security-arm64.yml up -d
+   docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras-arm64.yml -f docker-compose.security-arm64.yml up -d
    ```
 
 ### 1. Traefik - SSL Automático 🔐
@@ -549,11 +549,14 @@ uname -m
 **Solución: Usar archivos compatibles con ARM64**
 
 ```bash
-# Base + Avanzados + Extras (todos compatibles con ARM64)
-docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml up -d
+# Base + Avanzados (todos compatibles)
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml up -d
 
-# Si necesitas seguridad, usa la versión ARM64
-docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml -f docker-compose.security-arm64.yml up -d
+# Base + Avanzados + Extras ARM64
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras-arm64.yml up -d
+
+# TODO: Base + Avanzados + Extras + Seguridad (versión ARM64 completa)
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras-arm64.yml -f docker-compose.security-arm64.yml up -d
 ```
 
 **Servicios NO disponibles en ARM64:**
@@ -568,7 +571,9 @@ docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-co
 - ✅ Todos los servicios extras (Kometa, Homepage, Recyclarr, etc.)
 - ✅ Servicios de seguridad: Authelia, Fail2ban, ClamAV, Loki, Promtail
 
-**Archivo creado:** `docker-compose.security-arm64.yml` - Versión de seguridad compatible con ARM64
+**Archivos ARM64 creados:**
+- `docker-compose.extras-arm64.yml` - Servicios extras sin Scrutiny
+- `docker-compose.security-arm64.yml` - Servicios de seguridad compatibles
 
 ---
 
@@ -769,7 +774,7 @@ docker compose -f docker-compose.yml -f docker-compose.security.yml up -d
 - ✅ Agregados comandos para levantar múltiples archivos compose
 - ✅ Agregados aliases recomendados para facilitar el uso
 - ✅ Soporte completo para ARM64 (aarch64)
-- ✅ Nuevo archivo: `docker-compose.security-arm64.yml`
+- ✅ Nuevos archivos ARM64: `docker-compose.extras-arm64.yml` y `docker-compose.security-arm64.yml`
 - ✅ Documentación de compatibilidad de arquitecturas
 
 **¿Necesitas ayuda?** Revisa la sección de [Troubleshooting](#-troubleshooting) o consulta los scripts de testing.
