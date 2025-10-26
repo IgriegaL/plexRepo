@@ -134,6 +134,9 @@ Espera 2-3 minutos y accede a:
 - **Disco**:
   - 50GB+ para configuraciones (NVMe recomendado)
   - 500GB+ para contenido multimedia
+- **Arquitectura**: 
+  - ✅ AMD64/x86_64 (Intel/AMD) - Soporte completo
+  - ⚠️ ARM64 (Raspberry Pi, Apple Silicon) - Soporte parcial (algunos servicios no disponibles)
 
 ### Flujo de Trabajo
 
@@ -232,11 +235,21 @@ docker compose -f docker-compose.yml -f docker-compose.advanced.yml down
 docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml -f docker-compose.security.yml down
 ```
 
-**⚠️ Nota:** Para usar `docker-compose.security.yml`, primero ejecuta:
+**⚠️ Notas importantes:**
 
-```bash
-./scripts/security/generate-secrets.sh
-```
+1. Para usar servicios de seguridad, primero ejecuta:
+   ```bash
+   ./scripts/security/generate-secrets.sh
+   ```
+
+2. **Si tu servidor es ARM64** (Raspberry Pi, Oracle Cloud ARM, etc.):
+   ```bash
+   # Verificar arquitectura
+   uname -m  # Si muestra aarch64 o arm64, usa el archivo ARM64
+   
+   # Usar versión compatible con ARM64
+   docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml -f docker-compose.security-arm64.yml up -d
+   ```
 
 ### 1. Traefik - SSL Automático 🔐
 
@@ -521,6 +534,42 @@ curl -X POST http://localhost:8000/notify/apprise -d "body=Test"
 cat apprise/apprise.yml
 ```
 
+### Error: no matching manifest for linux/arm64
+
+Este error ocurre en sistemas ARM64 (Raspberry Pi, Oracle Cloud ARM, etc.). Algunos servicios no tienen imágenes ARM64.
+
+**Verificar arquitectura del sistema:**
+
+```bash
+uname -m
+# arm64 o aarch64 = ARM64
+# x86_64 = AMD64/Intel
+```
+
+**Solución: Usar archivos compatibles con ARM64**
+
+```bash
+# Base + Avanzados + Extras (todos compatibles con ARM64)
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml up -d
+
+# Si necesitas seguridad, usa la versión ARM64
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml -f docker-compose.security-arm64.yml up -d
+```
+
+**Servicios NO disponibles en ARM64:**
+- ❌ `crowdsec` - No disponible
+- ❌ `scrutiny` - No disponible
+- ❌ `trivy` - No disponible
+- ❌ `modsecurity` - No disponible
+
+**Servicios SÍ disponibles en ARM64:**
+- ✅ Todos los servicios base (Plex, Sonarr, Radarr, etc.)
+- ✅ Todos los servicios avanzados (Traefik, Gluetun, Tautulli, etc.)
+- ✅ Todos los servicios extras (Kometa, Homepage, Recyclarr, etc.)
+- ✅ Servicios de seguridad: Authelia, Fail2ban, ClamAV, Loki, Promtail
+
+**Archivo creado:** `docker-compose.security-arm64.yml` - Versión de seguridad compatible con ARM64
+
 ---
 
 ## 📝 Comandos Útiles
@@ -710,14 +759,17 @@ docker compose -f docker-compose.yml -f docker-compose.security.yml up -d
 
 ---
 
-**Versión:** 2.2.0  
+**Versión:** 2.3.0  
 **Última actualización:** 26 de Octubre, 2025  
 **Mantenido por:** IgriegaL/plexRepo
 
-**Cambios en v2.2.0:**
+**Cambios en v2.3.0:**
 - ✅ Actualizado a Docker Compose v2 (sintaxis moderna)
 - ✅ Corregido conflicto de puerto 8080 (cAdvisor → 8081)
 - ✅ Agregados comandos para levantar múltiples archivos compose
 - ✅ Agregados aliases recomendados para facilitar el uso
+- ✅ Soporte completo para ARM64 (aarch64)
+- ✅ Nuevo archivo: `docker-compose.security-arm64.yml`
+- ✅ Documentación de compatibilidad de arquitecturas
 
 **¿Necesitas ayuda?** Revisa la sección de [Troubleshooting](#-troubleshooting) o consulta los scripts de testing.
