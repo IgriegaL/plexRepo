@@ -39,7 +39,6 @@ Sistema completo de servidor multimedia con gestión automatizada, monitoreo, no
 ### Avanzados (Opcionales)
 
 - **Traefik** - Reverse proxy con SSL automático
-- **Gluetun** - VPN para torrents
 - **Watchtower** - Auto-actualización de contenedores
 - **Tautulli** - Estadísticas de Plex
 - **Apprise** - Notificaciones multi-plataforma
@@ -180,7 +179,7 @@ Usuario → Overseerr → Sonarr/Radarr → Prowlarr → Indexadores
 2. Settings > Media Management
    - Root Folder: `/tv`
 3. Settings > Download Clients > Add > qBittorrent
-   - Host: `qbittorrent` (o `gluetun` si usas VPN)
+      - Host: `qbittorrent`
    - Port: `8089`
 
 #### 4. Radarr (Películas)
@@ -207,7 +206,7 @@ Usuario → Overseerr → Sonarr/Radarr → Prowlarr → Indexadores
 docker compose -f docker-compose.yml -f docker-compose.advanced.yml up -d
 
 # O solo algunos servicios específicos
-docker compose -f docker-compose.yml -f docker-compose.advanced.yml up -d traefik gluetun tautulli apprise
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml up -d traefik tautulli apprise
 ```
 
 ### Levantar Múltiples Archivos Compose
@@ -266,24 +265,9 @@ ACME_EMAIL=tu-email@ejemplo.com
 - Dashboard: <http://localhost:8080>
 - Servicios: <https://plex.tudominio.com>, <https://sonarr.tudominio.com>, etc.
 
-### 2. Gluetun - VPN para Torrents 🔒
+### 2. VPN (nota)
 
-**Configuración:**
-
-```env
-# En .env
-VPN_SERVICE_PROVIDER=nordvpn  # o tu proveedor
-VPN_USERNAME=tu_usuario
-VPN_PASSWORD=tu_password
-VPN_SERVER_COUNTRIES=Chile
-```
-
-**Verificar VPN:**
-
-```bash
-# Ver IP pública de qBittorrent
-docker exec gluetun curl ifconfig.me
-```
+El soporte integrado para VPN (Gluetun) fue removido del repositorio. Si necesitas enrutar descargas a través de una VPN, integra y configura manualmente un contenedor VPN siguiendo la documentación del proveedor (por ejemplo `qmcgaw/gluetun`). Este repositorio ya no mantiene ni documenta una configuración VPN por defecto.
 
 ### 3. Watchtower - Auto-actualizaciones 🔄
 
@@ -508,14 +492,15 @@ Si obtienes el error `Bind for 0.0.0.0:8080 failed: port is already allocated`:
 ### VPN no conecta
 
 ```bash
-# Ver logs
-docker logs gluetun
+# Ver logs (si usabas una integración VPN externa, revisa ese contenedor)
+# docker logs <tu_contenedor_vpn>
 
 # Verificar credenciales
 cat .env | grep VPN
 
 # Verificar IP
-docker exec gluetun curl ifconfig.me
+# Si usas una integración VPN externa, consulta la IP pública desde ese contenedor
+# docker exec <tu_contenedor_vpn> curl ifconfig.me
 ```
 
 ### Notificaciones no llegan
@@ -569,7 +554,7 @@ docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-co
 
 **Servicios SÍ disponibles en ARM64:**
 - ✅ Todos los servicios base (Plex, Sonarr, Radarr, etc.)
-- ✅ Todos los servicios avanzados (Traefik, Gluetun, Tautulli, etc.)
+-- ✅ Todos los servicios avanzados (Traefik, Tautulli, etc.)
 - ✅ Todos los servicios extras (Kometa, Homepage, Recyclarr, etc.)
 - ✅ Servicios de seguridad: Authelia, Fail2ban, ClamAV, Loki, Promtail
 
@@ -668,7 +653,7 @@ dc-all-down        # Detener todo
 - ✅ Healthchecks automáticos
 - ✅ Límites de recursos
 - ✅ Logging controlado (30MB máx por contenedor)
-- ✅ VPN para torrents (opcional)
+-- (Nota) VPN integrada removida
 - ✅ SSL automático con Traefik (opcional)
 
 ### Seguridad Avanzada (Opcional)
@@ -728,7 +713,7 @@ docker compose -f docker-compose.yml -f docker-compose.security.yml up -d
 3. ✅ Conectar Prowlarr con Sonarr/Radarr
 4. ✅ Configurar indexadores
 5. ✅ Configurar notificaciones (Apprise)
-6. ✅ Habilitar VPN (Gluetun) si lo deseas
+6. (Opcional) Integrar VPN manualmente si lo deseas
 7. ✅ Configurar SSL (Traefik) para acceso externo
 8. ✅ Monitorear en Grafana
 

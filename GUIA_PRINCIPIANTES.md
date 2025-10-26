@@ -701,7 +701,7 @@ Si llegaste hasta aquí, ya tienes tu propio servidor multimedia funcionando.
 
 ### Próximos pasos opcionales
 
-1. **Agregar VPN** (para proteger descargas)
+1. (Opcional) Integrar VPN manualmente si lo deseas
    - Ver: `docker-compose.advanced.yml`
 
 2. **Configurar acceso desde internet**

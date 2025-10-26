@@ -341,14 +341,14 @@ crontab -e
 
 1. **frontend** - Servicios públicos (Plex, Overseerr, Traefik)
 2. **backend** - Servicios internos (Sonarr, Radarr) - SIN internet directo
-3. **vpn** - Solo torrents a través de VPN
+3. **vpn** - (removido) Esta red ya no se crea por defecto
 4. **monitoring** - Prometheus, Grafana, Loki - Aislado
 
 ### Ventajas
 
 - Limita superficie de ataque
 - Servicios internos no accesibles desde internet
-- Torrents siempre por VPN
+  - Torrents no viajan por una VPN integrada en este repositorio (opcional: integrar manualmente)
 - Monitoreo aislado
 
 ---

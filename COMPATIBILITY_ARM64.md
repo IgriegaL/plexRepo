@@ -23,7 +23,6 @@ Todos los servicios base son **100% compatibles** con ARM64:
 La mayoría son compatibles con ARM64:
 
 - ✅ Traefik - `traefik:v2.10`
-- ✅ Gluetun (VPN) - `qmcgaw/gluetun:latest`
 - ✅ Watchtower - `containrrr/watchtower:latest`
 - ✅ Tautulli - `lscr.io/linuxserver/tautulli:latest`
 - ⚠️ Organizr - `organizr/organizr:latest` (soporte limitado, puede fallar)
