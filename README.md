@@ -207,6 +207,37 @@ docker compose -f docker-compose.yml -f docker-compose.advanced.yml up -d
 docker compose -f docker-compose.yml -f docker-compose.advanced.yml up -d traefik gluetun tautulli apprise
 ```
 
+### Levantar Múltiples Archivos Compose
+
+Puedes combinar varios archivos docker-compose según tus necesidades:
+
+```bash
+# Base + Avanzados (recomendado para empezar)
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml up -d
+
+# Base + Avanzados + Extras
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml up -d
+
+# TODO (base + avanzados + extras + seguridad)
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml -f docker-compose.security.yml up -d
+```
+
+**Detener todos los servicios:**
+
+```bash
+# Detener base + avanzados
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml down
+
+# Detener todo
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml -f docker-compose.security.yml down
+```
+
+**⚠️ Nota:** Para usar `docker-compose.security.yml`, primero ejecuta:
+
+```bash
+./scripts/security/generate-secrets.sh
+```
+
 ### 1. Traefik - SSL Automático 🔐
 
 **Configuración:**
@@ -494,6 +525,8 @@ cat apprise/apprise.yml
 
 ## 📝 Comandos Útiles
 
+### Comandos Básicos
+
 ```bash
 # Iniciar servicios base
 docker compose up -d
@@ -501,8 +534,14 @@ docker compose up -d
 # Iniciar con servicios avanzados
 docker compose -f docker-compose.yml -f docker-compose.advanced.yml up -d
 
+# Iniciar TODO (base + avanzados + extras)
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml up -d
+
 # Ver logs en tiempo real
 docker compose logs -f
+
+# Ver logs de un servicio específico
+docker compose logs -f plex
 
 # Ver estado
 docker compose ps
@@ -523,8 +562,42 @@ docker compose up -d
 # Ver uso de recursos
 docker stats
 
-# Limpiar
+# Limpiar contenedores e imágenes no usadas
 docker system prune -a
+```
+
+### Aliases Recomendados
+
+Agrega estos aliases a tu `~/.bashrc` o `~/.zshrc` para facilitar el uso:
+
+```bash
+# Agregar al final del archivo
+alias dc='docker compose'
+alias dc-up='docker compose up -d'
+alias dc-down='docker compose down'
+alias dc-logs='docker compose logs -f'
+alias dc-ps='docker compose ps'
+
+# Para servicios avanzados
+alias dc-all-up='docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml up -d'
+alias dc-all-down='docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml down'
+alias dc-all-logs='docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-compose.extras.yml logs -f'
+```
+
+**Aplicar cambios:**
+
+```bash
+source ~/.bashrc  # o source ~/.zshrc
+```
+
+**Uso después de configurar aliases:**
+
+```bash
+dc-up              # Iniciar servicios base
+dc-all-up          # Iniciar todos los servicios
+dc-logs plex       # Ver logs de Plex
+dc-ps              # Ver estado
+dc-all-down        # Detener todo
 ```
 
 ---
@@ -637,8 +710,14 @@ docker compose -f docker-compose.yml -f docker-compose.security.yml up -d
 
 ---
 
-**Versión:** 2.1.0  
+**Versión:** 2.2.0  
 **Última actualización:** 26 de Octubre, 2025  
 **Mantenido por:** IgriegaL/plexRepo
+
+**Cambios en v2.2.0:**
+- ✅ Actualizado a Docker Compose v2 (sintaxis moderna)
+- ✅ Corregido conflicto de puerto 8080 (cAdvisor → 8081)
+- ✅ Agregados comandos para levantar múltiples archivos compose
+- ✅ Agregados aliases recomendados para facilitar el uso
 
 **¿Necesitas ayuda?** Revisa la sección de [Troubleshooting](#-troubleshooting) o consulta los scripts de testing.
