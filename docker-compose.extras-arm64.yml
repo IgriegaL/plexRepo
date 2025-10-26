@@ -148,6 +148,8 @@ services:
 
 networks:
   media:
+    name: plexrepo_media
     external: true
   monitoring:
+    name: plexrepo_monitoring
     external: true
