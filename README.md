@@ -104,11 +104,13 @@ sudo chown -R $(id -u):$(id -g) /mnt/DiscoDuro
 ./scripts/test-config.sh
 
 # Iniciar servicios base
-docker-compose up -d
+docker compose up -d
 
 # Ver logs
-docker-compose logs -f
+docker compose logs -f
 ```
+
+> **⚠️ Nota:** Usa `docker compose` (con espacio) en lugar de `docker-compose` (con guión) si tienes Docker Compose v2+
 
 ### 4. Acceder a Servicios
 
@@ -199,10 +201,10 @@ Usuario → Overseerr → Sonarr/Radarr → Prowlarr → Indexadores
 
 ```bash
 # Todos los servicios avanzados
-docker-compose -f docker-compose.yml -f docker-compose.advanced.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml up -d
 
-# O solo algunos
-docker-compose -f docker-compose.advanced.yml up -d traefik gluetun tautulli apprise
+# O solo algunos servicios específicos
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml up -d traefik gluetun tautulli apprise
 ```
 
 ### 1. Traefik - SSL Automático 🔐
@@ -365,7 +367,7 @@ curl -X POST http://localhost:8000/notify/apprise \
 ./scripts/backup.sh
 
 # 3. Iniciar
-docker-compose up -d
+docker compose up -d
 
 # 4. Esperar 2 minutos
 sleep 120
@@ -392,7 +394,7 @@ sleep 120
 | **Monitoreo** ||||
 | Grafana | 3000 | <http://localhost:3000> | Dashboards |
 | Prometheus | 9090 | <http://localhost:9090> | Métricas |
-| cAdvisor | 8080 | <http://localhost:8080> | Métricas Docker |
+| cAdvisor | 8081 | <http://localhost:8081> | Métricas Docker |
 | **Avanzados** ||||
 | Traefik | 8080 | <http://localhost:8080> | Dashboard proxy |
 | Tautulli | 8181 | <http://localhost:8181> | Estadísticas Plex |
@@ -413,7 +415,7 @@ sleep 120
 PLEX_CLAIM=claim-nuevo-token
 
 # Reiniciar
-docker-compose restart plex
+docker compose restart plex
 ```
 
 ### Permisos denegados
@@ -435,10 +437,10 @@ sudo chown -R $(id -u):$(id -g) /mnt/DiscoDuro
 sleep 120
 
 # Ver logs
-docker-compose logs <servicio>
+docker compose logs <servicio>
 
 # Reiniciar
-docker-compose restart <servicio>
+docker compose restart <servicio>
 ```
 
 ### Puerto en uso
@@ -448,8 +450,16 @@ docker-compose restart <servicio>
 lsof -i :32400
 
 # Detener si es necesario
-docker-compose down
+docker compose down
 ```
+
+#### Conflicto común: Puerto 8080 (cAdvisor vs Traefik)
+
+Si obtienes el error `Bind for 0.0.0.0:8080 failed: port is already allocated`:
+
+- ✅ **Solución aplicada:** cAdvisor usa puerto 8081 (modificado en `docker-compose.yml`)
+- Traefik puede usar el puerto 8080 sin conflictos
+- Accede a cAdvisor en: <http://localhost:8081>
 
 ### VPN no conecta
 
@@ -485,24 +495,30 @@ cat apprise/apprise.yml
 ## 📝 Comandos Útiles
 
 ```bash
-# Iniciar servicios
-docker-compose up -d
+# Iniciar servicios base
+docker compose up -d
+
+# Iniciar con servicios avanzados
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml up -d
 
 # Ver logs en tiempo real
-docker-compose logs -f
+docker compose logs -f
 
 # Ver estado
-docker-compose ps
+docker compose ps
 
 # Reiniciar servicio
-docker-compose restart <servicio>
+docker compose restart <servicio>
 
 # Detener todo
-docker-compose down
+docker compose down
+
+# Detener servicios avanzados
+docker compose -f docker-compose.yml -f docker-compose.advanced.yml down
 
 # Actualizar imágenes
-docker-compose pull
-docker-compose up -d
+docker compose pull
+docker compose up -d
 
 # Ver uso de recursos
 docker stats
@@ -558,7 +574,7 @@ Sistema de seguridad completo disponible en `docker-compose.security.yml`:
 ./scripts/security/generate-secrets.sh
 
 # Iniciar servicios de seguridad
-docker-compose -f docker-compose.yml -f docker-compose.security.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.security.yml up -d
 
 # Configurar 2FA
 # Accede a: http://localhost:9091
