@@ -79,10 +79,11 @@ services:
     volumes:
       - ${QBITTORRENT_CONFIG_VOLUME}:/config
       - ${DOWNLOADS_VOLUME}:/downloads
-    ports:
-      - 8089:8089
-      - 6881:6881
-      - 6881:6881/udp
+    # Use gluetun's network so qBittorrent traffic goes through the VPN and
+    # avoid binding the same host ports twice (gluetun publishes 8089/6881).
+    depends_on:
+      - gluetun
+    network_mode: "service:gluetun"
     restart: unless-stopped
     mem_limit: 2gb
     cpus: 0.5
