@@ -55,63 +55,18 @@ services:
 
   # ------------------- Fase 2: Muy Útiles -------------------
   
-  # Requestrr - Bot de Discord/Telegram
-  requestrr:
-    image: thomst08/requestrr:latest
-    container_name: requestrr
-    restart: unless-stopped
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ./requestrr:/root/config
-    ports:
-      - "4545:4545"
-    networks:
-      - media
-    depends_on:
-      - overseerr
-      - sonarr
-      - radarr
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  # Autoscan - Escaneo Instantáneo de Plex
-  autoscan:
-    image: cloudb0x/autoscan:latest
-    container_name: autoscan
-    restart: unless-stopped
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ./autoscan:/config
-      - ${TV_SERIES_VOLUME}:/tv:ro
-      - ${MOVIES_VOLUME}:/movies:ro
-    ports:
-      - "3030:3030"
-    networks:
-      - media
-    depends_on:
-      - plex
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+  # Nota: Requestrr y Autoscan no tienen soporte ARM64 confiable
+  # Si los necesitas, considera alternativas o compilar desde fuente
 
   # ------------------- Fase 3: Mejoras Visuales -------------------
   
   # Kometa - Gestor de Colecciones y Metadata
+  # Nota: Kometa tiene soporte ARM64 pero puede requerir más recursos
   kometa:
     image: kometateam/kometa:latest
     container_name: kometa
     restart: unless-stopped
+    platform: linux/arm64
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -162,10 +117,12 @@ services:
   # ------------------- Fase 4: Mantenimiento -------------------
   
   # Maintainerr - Limpieza Automática
+  # Nota: Maintainerr tiene soporte ARM64
   maintainerr:
     image: ghcr.io/jorenn92/maintainerr:latest
     container_name: maintainerr
     restart: unless-stopped
+    platform: linux/arm64
     user: ${PUID}:${PGID}
     environment:
       - TZ=${TZ}

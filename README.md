@@ -564,6 +564,8 @@ docker compose -f docker-compose.yml -f docker-compose.advanced.yml -f docker-co
 - ❌ `scrutiny` - No disponible
 - ❌ `trivy` - No disponible
 - ❌ `modsecurity` - No disponible
+- ❌ `requestrr` - Soporte limitado/inestable
+- ❌ `autoscan` - Soporte limitado/inestable
 
 **Servicios SÍ disponibles en ARM64:**
 - ✅ Todos los servicios base (Plex, Sonarr, Radarr, etc.)
