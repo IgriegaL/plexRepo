@@ -134,7 +134,7 @@ networks:
     name: frontend
     ipam:
       config:
-        - subnet: 172.20.0.0/16
+        - subnet: 172.25.0.0/16
   
   backend:
     driver: bridge
@@ -142,7 +142,7 @@ networks:
     internal: true  # Sin acceso directo a internet
     ipam:
       config:
-        - subnet: 172.21.0.0/16
+        - subnet: 172.26.0.0/16
   
   monitoring:
     external: true
