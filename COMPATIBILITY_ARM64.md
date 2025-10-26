@@ -53,11 +53,11 @@ Todos compatibles con ARM64:
 
 - ✅ Authelia - `authelia/authelia:latest`
 - ✅ Fail2ban - `crazymax/fail2ban:latest`
-- ✅ ClamAV - `clamav/clamav:latest`
 - ✅ Loki - `grafana/loki:latest`
 - ✅ Promtail - `grafana/promtail:latest`
 
-### ❌ Excluidos (no disponibles en ARM64):
+### ❌ Servicios de seguridad excluidos (no disponibles en ARM64):
+- ❌ ClamAV - No tiene imagen ARM64 confiable
 - ❌ CrowdSec - No tiene imagen ARM64
 - ❌ Trivy - No tiene imagen ARM64
 - ❌ ModSecurity - No tiene imagen ARM64
