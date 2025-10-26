@@ -1,6 +1,9 @@
 api:
   dashboard: true
-  insecure: true  # Cambiar a false en producción
+  # En producción recomendamos deshabilitar el modo inseguro y proteger el dashboard
+  # con Authelia o autenticación básica. Mantener 'insecure: false' y usar middleware
+  # para proteger el acceso.
+  insecure: false
 
 entryPoints:
   web:
