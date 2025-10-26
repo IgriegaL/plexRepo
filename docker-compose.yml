@@ -31,8 +31,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    networks:
-      - media
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
@@ -79,11 +77,10 @@ services:
     volumes:
       - ${QBITTORRENT_CONFIG_VOLUME}:/config
       - ${DOWNLOADS_VOLUME}:/downloads
-    # Use gluetun's network so qBittorrent traffic goes through the VPN and
-    # avoid binding the same host ports twice (gluetun publishes 8089/6881).
-    depends_on:
-      - gluetun
-    network_mode: "service:gluetun"
+    ports:
+      - 8089:8089
+      - 6881:6881
+      - 6881:6881/udp
     restart: unless-stopped
     mem_limit: 2gb
     cpus: 0.5

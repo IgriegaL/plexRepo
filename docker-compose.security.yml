@@ -197,9 +197,3 @@ networks:
       config:
         - subnet: 172.21.0.0/16
   
-  vpn:
-    driver: bridge
-    name: vpn
-    ipam:
-      config:
-        - subnet: 172.22.0.0/16
