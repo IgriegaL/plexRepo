@@ -1,0 +1,48 @@
+# Environment variables
+.env
+
+# Docker volumes
+volumes/
+
+# Grafana data
+grafana_data/
+
+# Prometheus data
+prometheus_data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Backup files
+*.bak
+*.backup
+
+# Security - CRÍTICO: NO subir estos archivos
+secrets/
+*.key
+*.pem
+*.crt
+authelia/db.sqlite3
+authelia/notification.txt
+fail2ban/db/
+clamav/signatures/
+clamav/quarantine/
+trivy/reports/
+loki/
+crowdsec/data/
+modsecurity/logs/
+
+# Backups encriptados
+*-backups-encrypted/
+*.gpg

@@ -1,0 +1,167 @@
+name: Validar Configuración
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-docker-compose:
+    name: Validar Docker Compose
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Instalar Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+      
+      - name: Validar docker-compose.yml
+        run: docker-compose config
+      
+      - name: Validar docker-compose.advanced.yml
+        run: docker-compose -f docker-compose.advanced.yml config
+      
+      - name: Validar docker-compose.security.yml
+        run: docker-compose -f docker-compose.security.yml config
+      
+      - name: Validar sintaxis YAML
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: |
+            docker-compose.yml
+            docker-compose.advanced.yml
+            docker-compose.security.yml
+            traefik/
+            authelia/
+            loki/
+            promtail/
+          config_data: |
+            extends: default
+            rules:
+              line-length:
+                max: 120
+                level: warning
+              comments:
+                min-spaces-from-content: 1
+
+  validate-env-example:
+    name: Validar .env.example
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Verificar que .env.example existe
+        run: |
+          if [ ! -f .env.example ]; then
+            echo "❌ ERROR: .env.example no existe"
+            exit 1
+          fi
+          echo "✅ .env.example existe"
+      
+      - name: Verificar variables requeridas
+        run: |
+          REQUIRED_VARS=(
+            "PUID"
+            "PGID"
+            "TZ"
+            "PLEX_CLAIM"
+            "GRAFANA_ADMIN_PASSWORD"
+          )
+          
+          for var in "${REQUIRED_VARS[@]}"; do
+            if ! grep -q "^${var}=" .env.example; then
+              echo "❌ ERROR: Variable $var no está en .env.example"
+              exit 1
+            fi
+            echo "✅ Variable $var encontrada"
+          done
+
+  check-security:
+    name: Verificar Seguridad
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Verificar que .env no esté en el repo
+        run: |
+          if git ls-files | grep -q "^\.env$"; then
+            echo "❌ ERROR: Archivo .env está en el repositorio"
+            exit 1
+          fi
+          echo "✅ .env no está en el repositorio"
+      
+      - name: Verificar que no haya secrets
+        run: |
+          if git ls-files | grep -q "secrets/"; then
+            echo "❌ ERROR: Carpeta secrets/ está en el repositorio"
+            exit 1
+          fi
+          echo "✅ No hay secrets en el repositorio"
+      
+      - name: Verificar que no haya certificados
+        run: |
+          if git ls-files | grep -E "\.(key|pem|crt)$"; then
+            echo "❌ ERROR: Archivos de certificados en el repositorio"
+            exit 1
+          fi
+          echo "✅ No hay certificados en el repositorio"
+      
+      - name: Verificar .gitignore
+        run: |
+          if [ ! -f .gitignore ]; then
+            echo "❌ ERROR: .gitignore no existe"
+            exit 1
+          fi
+          
+          REQUIRED_IGNORES=(
+            ".env"
+            "secrets/"
+            "*.key"
+            "*.pem"
+            "*.crt"
+          )
+          
+          for ignore in "${REQUIRED_IGNORES[@]}"; do
+            if ! grep -q "$ignore" .gitignore; then
+              echo "❌ ERROR: $ignore no está en .gitignore"
+              exit 1
+            fi
+            echo "✅ $ignore está en .gitignore"
+          done
+
+  validate-scripts:
+    name: Validar Scripts
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Instalar ShellCheck
+        run: sudo apt-get install -y shellcheck
+      
+      - name: Validar sintaxis de scripts
+        run: |
+          find scripts/ -name "*.sh" -type f | while read script; do
+            echo "Validando: $script"
+            shellcheck "$script" || exit 1
+          done
+      
+      - name: Verificar permisos de ejecución
+        run: |
+          find scripts/ -name "*.sh" -type f | while read script; do
+            if [ ! -x "$script" ]; then
+              echo "❌ ERROR: $script no tiene permisos de ejecución"
+              exit 1
+            fi
+            echo "✅ $script tiene permisos de ejecución"
+          done

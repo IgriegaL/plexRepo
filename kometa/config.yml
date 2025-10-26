@@ -1,0 +1,96 @@
+# Configuración de Kometa (Plex Meta Manager)
+# Documentación: https://kometa.wiki/
+
+libraries:
+  Movies:
+    metadata_path:
+      - pmm: basic
+      - pmm: imdb
+      - pmm: studio
+      - pmm: genre
+      - pmm: actor
+      - pmm: director
+      - pmm: year
+      - pmm: content_rating_us
+    
+    operations:
+      mass_genre_update: tmdb
+      mass_content_rating_update: mdb_commonsense
+      mass_audience_rating_update: mdb_tomatoesaudience
+      mass_critic_rating_update: mdb_tomatoes
+      mass_user_rating_update: imdb
+    
+    overlay_path:
+      - pmm: ribbon
+      - pmm: ratings
+
+  TV Shows:
+    metadata_path:
+      - pmm: basic
+      - pmm: imdb
+      - pmm: network
+      - pmm: genre
+      - pmm: actor
+      - pmm: year
+      - pmm: content_rating_us
+    
+    operations:
+      mass_genre_update: tmdb
+      mass_content_rating_update: mdb_commonsense
+      mass_audience_rating_update: mdb_tomatoesaudience
+      mass_critic_rating_update: mdb_tomatoes
+      mass_user_rating_update: imdb
+    
+    overlay_path:
+      - pmm: ribbon
+      - pmm: ratings
+
+plex:
+  url: http://plex:32400
+  token: !env_var PLEX_TOKEN
+  timeout: 60
+  clean_bundles: true
+  empty_trash: true
+  optimize: true
+
+tmdb:
+  apikey: !env_var TMDB_API_KEY
+  language: es
+
+settings:
+  cache: true
+  cache_expiration: 60
+  asset_directory: config/assets
+  asset_folders: true
+  asset_depth: 0
+  create_asset_folders: false
+  prioritize_assets: false
+  dimensional_asset_rename: false
+  download_url_assets: false
+  show_missing_season_assets: false
+  show_missing_episode_assets: false
+  show_asset_not_needed: true
+  sync_mode: append
+  minimum_items: 1
+  default_collection_order:
+  delete_below_minimum: true
+  delete_not_scheduled: false
+  run_again_delay: 2
+  missing_only_released: false
+  only_filter_missing: false
+  show_unmanaged: true
+  show_unconfigured: true
+  show_filtered: false
+  show_options: false
+  show_missing: true
+  save_report: false
+  tvdb_language: es
+  ignore_ids:
+  ignore_imdb_ids:
+  item_refresh_delay: 0
+  playlist_sync_to_users: all
+  playlist_exclude_users:
+  playlist_report: false
+  verify_ssl: true
+  custom_repo:
+  check_nightly: false

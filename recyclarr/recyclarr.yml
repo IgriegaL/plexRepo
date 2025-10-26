@@ -1,0 +1,92 @@
+# Configuración de Recyclarr
+# Documentación: https://recyclarr.dev/
+
+# Sonarr - Series
+sonarr:
+  sonarr-main:
+    base_url: http://sonarr:8989
+    api_key: !env_var SONARR_API_KEY
+
+    # Perfiles de calidad basados en TRaSH Guides
+    quality_profiles:
+      - name: WEB-1080p
+        reset_unmatched_scores:
+          enabled: true
+        upgrade:
+          allowed: true
+          until_quality: Bluray-1080p
+          until_score: 10000
+        min_format_score: 0
+        quality_sort: top
+        qualities:
+          - name: Bluray-1080p
+          - name: WEB 1080p
+            qualities:
+              - WEBDL-1080p
+              - WEBRip-1080p
+          - name: HDTV-1080p
+
+    # Custom Formats (Formatos personalizados)
+    custom_formats:
+      # Preferir releases de grupos conocidos
+      - trash_ids:
+          - d428eda85af1df8904b4bbe4fc2f537c  # WEB Tier 01
+          - 3a3ff47579026e76d6504ebea39390de  # WEB Tier 02
+          - b6832f586342ef70d9c128d40c07b872  # WEB Tier 03
+        quality_profiles:
+          - name: WEB-1080p
+            score: 1700
+
+      # Evitar releases malos
+      - trash_ids:
+          - 85c61753df5da1fb2aab6f2a47426b09  # BR-DISK
+          - 9c11cd3f07101cdba90a2d81cf0e56b4  # LQ
+          - e2315f990da2e2cbfc9fa5b7a6fcfe48  # LQ (Release Title)
+        quality_profiles:
+          - name: WEB-1080p
+            score: -10000
+
+# Radarr - Películas
+radarr:
+  radarr-main:
+    base_url: http://radarr:7878
+    api_key: !env_var RADARR_API_KEY
+
+    # Perfiles de calidad
+    quality_profiles:
+      - name: Remux-1080p
+        reset_unmatched_scores:
+          enabled: true
+        upgrade:
+          allowed: true
+          until_quality: Remux-1080p
+          until_score: 10000
+        min_format_score: 0
+        quality_sort: top
+        qualities:
+          - name: Remux-1080p
+          - name: Bluray-1080p
+          - name: WEB 1080p
+            qualities:
+              - WEBDL-1080p
+              - WEBRip-1080p
+
+    # Custom Formats
+    custom_formats:
+      # Preferir Remux y Bluray
+      - trash_ids:
+          - 496f355514737f7d83bf7aa4d24f8169  # TrueHD Atmos
+          - 2f22d89048b01681dde8afe203bf2e95  # DTS X
+          - 417804f7f2c4308c1f4c5d380d4c4475  # ATMOS (undefined)
+        quality_profiles:
+          - name: Remux-1080p
+            score: 6500
+
+      # Evitar releases malos
+      - trash_ids:
+          - ed38b889b31be83fda192888e2286d83  # BR-DISK
+          - 90cedc1fea7ea5d11298bebd3d1d3223  # EVO (no WEBDL)
+          - 90a6f9a284dff5103f6346090e6280c8  # LQ
+        quality_profiles:
+          - name: Remux-1080p
+            score: -10000

@@ -1,47 +1,628 @@
-# Media Server Setup
+# 🎬 Media Server - Servidor Multimedia Completo
 
-This project sets up a media server using Docker Compose. It includes services like Plex, Emby, qBittorrent, Sonarr, Radarr, Jackett, Overseerr, Prowlarr, and Bazarr.
+Sistema completo de servidor multimedia con gestión automatizada, monitoreo, notificaciones y funcionalidades avanzadas usando Docker Compose.
 
-## Requirements
+> **🎓 ¿Eres nuevo en Linux/Docker?** Lee primero **[GUIA_PRINCIPIANTES.md](GUIA_PRINCIPIANTES.md)** - Te guía paso a paso desde cero hasta tener todo funcionando.
 
-- Docker
-- Docker Compose
+## 📋 Tabla de Contenidos
 
-## Configuration
+- [Servicios Incluidos](#-servicios-incluidos)
+- [Inicio Rápido](#-inicio-rápido)
+- [Configuración Completa](#️-configuración-completa)
+- [Servicios Avanzados](#-servicios-avanzados-opcional)
+- [Notificaciones](#-notificaciones)
+- [Testing](#-testing-y-validación)
+- [Puertos](#-puertos-de-acceso)
+- [Troubleshooting](#-troubleshooting)
 
-1. Clone this repository to your local machine.
-2. Create a `.env` file in the root directory of the project with the following content:
+---
 
-    * Add these permissions to your user ID:
-      ```sh
-      sudo chmod -R 777 /root/plex /mnt/nvme/docker-volumes/sonarr /mnt/nvme/docker-volumes/radarr /mnt/nvme/docker-volumes/bazarr /mnt/nvme/docker-volumes/jackett /mnt/nvme/docker-volumes/prowlarr /mnt/nvme/docker-volumes/overseerr /mnt/nvme/docker-volumes/qbittorrent /mnt/DiscoDuro/tvserie /mnt/DiscoDuro/movies /mnt/DiscoDuro/downloads
-      ```
+## 🎬 Servicios Incluidos
 
-    ```env
-    PUID={yourId or root}
-    PGID={yourId or root}
-    TZ=Chile/Continental
+### Media Center (Base)
 
-    # Replace with directory on your system : mnt/DiscoDuro
+- **Plex** - Servidor de streaming multimedia
+- **qBittorrent** - Cliente de torrents (con VPN opcional)
+- **Sonarr** - Gestor automático de series TV
+- **Radarr** - Gestor automático de películas
+- **Prowlarr** - Gestor de indexadores
+- **Bazarr** - Gestor automático de subtítulos
+- **Overseerr** - Interfaz de solicitud de contenido
 
-    PLEX_CONFIG_VOLUME=/mnt/DiscoDuro/docker/plex
-    TV_SERIES_VOLUME=/mnt/DiscoDuro/tvserie
-    MOVIES_VOLUME=/mnt/DiscoDuro/movies
-    QBITTORRENT_CONFIG_VOLUME=/mnt/DiscoDuro/qbittorrent/appdata
-    DOWNLOADS_VOLUME=/mnt/DiscoDuro/downloads
-    SONARR_CONFIG_VOLUME=/mnt/DiscoDuro/sonarr
-    RADARR_CONFIG_VOLUME=/mnt/DiscoDuro/pvr/radarr
-    JACKETT_CONFIG_VOLUME=/mnt/DiscoDuro/jackett
-    OVERSEERR_CONFIG_VOLUME=/mnt/DiscoDuro/opt/pvr/overseerr
-    PROWLARR_CONFIG_VOLUME=/mnt/DiscoDuro/prowlarr
-    BAZARR_CONFIG_VOLUME=/mnt/DiscoDuro/bazarr
-    ```
+### Monitoreo (Base)
 
-3. Modify the paths in the [.env](http://_vscodecontentref_/1) file to match the directories on your system.
+- **Prometheus** - Sistema de métricas
+- **Grafana** - Visualización de métricas
+- **cAdvisor** - Métricas de contenedores
+- **Node Exporter** - Métricas del sistema
 
-## Usage
+### Avanzados (Opcionales)
 
-To start the services, run the following command in the root directory of the project:
+- **Traefik** - Reverse proxy con SSL automático
+- **Gluetun** - VPN para torrents
+- **Watchtower** - Auto-actualización de contenedores
+- **Tautulli** - Estadísticas de Plex
+- **Apprise** - Notificaciones multi-plataforma
+- **Unpackerr** - Extractor automático de archivos
+- **Organizr** - Dashboard unificado
 
-```sh
+---
+
+## 🚀 Inicio Rápido
+
+### 1. Configuración Inicial (10 minutos)
+
+```bash
+# Clonar y entrar al proyecto
+cd /Users/ms/plexRepo
+
+# Copiar plantilla de configuración
+cp .env.example .env
+
+# Editar configuración
+nano .env
+```
+
+**Variables mínimas requeridas:**
+
+```env
+PUID=1000  # Ejecutar: id -u
+PGID=1000  # Ejecutar: id -g
+TZ=Chile/Continental
+
+# Obtener en: https://www.plex.tv/claim/ (expira en 4 min)
+PLEX_CLAIM=claim-xxxxxxxxxxxxxxxx
+
+# Cambiar por seguridad
+GRAFANA_ADMIN_PASSWORD=tu_password_seguro
+
+# Rutas (ajustar según tu sistema)
+PLEX_CONFIG_VOLUME=/mnt/nvme/docker-volumes/plex
+TV_SERIES_VOLUME=/mnt/DiscoDuro/tvserie
+MOVIES_VOLUME=/mnt/DiscoDuro/movies
+DOWNLOADS_VOLUME=/mnt/DiscoDuro/downloads
+```
+
+### 2. Crear Directorios
+
+```bash
+# Configuraciones (NVMe - rápido)
+sudo mkdir -p /mnt/nvme/docker-volumes/{plex,sonarr,radarr,bazarr,prowlarr,overseerr,qbittorrent}
+
+# Medios (HDD - capacidad)
+sudo mkdir -p /mnt/DiscoDuro/{tvserie,movies,downloads}
+
+# Permisos
+sudo chown -R $(id -u):$(id -g) /mnt/nvme/docker-volumes
+sudo chown -R $(id -u):$(id -g) /mnt/DiscoDuro
+```
+
+### 3. Iniciar Servicios
+
+```bash
+# Validar configuración
+./scripts/test-config.sh
+
+# Iniciar servicios base
 docker-compose up -d
+
+# Ver logs
+docker-compose logs -f
+```
+
+### 4. Acceder a Servicios
+
+Espera 2-3 minutos y accede a:
+
+- **Plex**: <http://localhost:32400/web>
+- **Overseerr**: <http://localhost:5055>
+- **Grafana**: <http://localhost:3000> (admin / tu_password)
+- **Sonarr**: <http://localhost:8989>
+- **Radarr**: <http://localhost:7878>
+
+---
+
+## ⚙️ Configuración Completa
+
+### Requisitos del Sistema
+
+- **Docker**: 20.10+
+- **Docker Compose**: 2.0+
+- **RAM**: Mínimo 4GB disponible
+- **Disco**:
+  - 50GB+ para configuraciones (NVMe recomendado)
+  - 500GB+ para contenido multimedia
+
+### Flujo de Trabajo
+
+```
+Usuario → Overseerr → Sonarr/Radarr → Prowlarr → Indexadores
+                           ↓
+                      qBittorrent (+ VPN)
+                           ↓
+                    Unpackerr (extrae .rar)
+                           ↓
+                    Bazarr (subtítulos)
+                           ↓
+                        Plex
+                           ↓
+                      Notificación (Apprise)
+```
+
+### Configuración de Servicios
+
+#### 1. Plex
+
+1. Accede a <http://localhost:32400/web>
+2. Inicia sesión con tu cuenta de Plex
+3. Agrega bibliotecas:
+   - Series: `/tv`
+   - Películas: `/movies`
+
+#### 2. Prowlarr (Indexadores)
+
+1. Accede a <http://localhost:9696>
+2. Settings > Indexers > Add Indexer
+3. Agrega tus indexadores favoritos
+4. Settings > Apps > Add Application
+   - Sonarr: <http://sonarr:8989>
+   - Radarr: <http://radarr:7878>
+5. Sincroniza indexadores
+
+#### 3. Sonarr (Series)
+
+1. Accede a <http://localhost:8989>
+2. Settings > Media Management
+   - Root Folder: `/tv`
+3. Settings > Download Clients > Add > qBittorrent
+   - Host: `qbittorrent` (o `gluetun` si usas VPN)
+   - Port: `8089`
+
+#### 4. Radarr (Películas)
+
+1. Accede a <http://localhost:7878>
+2. Configurar igual que Sonarr
+   - Root Folder: `/movies`
+
+#### 5. Overseerr (Solicitudes)
+
+1. Accede a <http://localhost:5055>
+2. Conecta con Plex
+3. Conecta con Sonarr y Radarr
+4. Configura permisos de usuarios
+
+---
+
+## 🚀 Servicios Avanzados (Opcional)
+
+### Iniciar Servicios Avanzados
+
+```bash
+# Todos los servicios avanzados
+docker-compose -f docker-compose.yml -f docker-compose.advanced.yml up -d
+
+# O solo algunos
+docker-compose -f docker-compose.advanced.yml up -d traefik gluetun tautulli apprise
+```
+
+### 1. Traefik - SSL Automático 🔐
+
+**Configuración:**
+
+```env
+# En .env
+DOMAIN=tudominio.com
+ACME_EMAIL=tu-email@ejemplo.com
+```
+
+**Acceso:**
+
+- Dashboard: <http://localhost:8080>
+- Servicios: <https://plex.tudominio.com>, <https://sonarr.tudominio.com>, etc.
+
+### 2. Gluetun - VPN para Torrents 🔒
+
+**Configuración:**
+
+```env
+# En .env
+VPN_SERVICE_PROVIDER=nordvpn  # o tu proveedor
+VPN_USERNAME=tu_usuario
+VPN_PASSWORD=tu_password
+VPN_SERVER_COUNTRIES=Chile
+```
+
+**Verificar VPN:**
+
+```bash
+# Ver IP pública de qBittorrent
+docker exec gluetun curl ifconfig.me
+```
+
+### 3. Watchtower - Auto-actualizaciones 🔄
+
+Actualiza contenedores automáticamente a las 4 AM diariamente.
+
+**Personalizar horario:**
+
+```yaml
+# En docker-compose.advanced.yml
+environment:
+  - WATCHTOWER_SCHEDULE=0 0 4 * * *  # Formato cron
+```
+
+### 4. Tautulli - Estadísticas de Plex 📊
+
+**Acceso:** <http://localhost:8181>
+
+**Configurar:**
+
+1. Settings > Plex Media Server
+2. IP: `plex`, Port: `32400`
+3. Obtener token de Plex
+
+### 5. Organizr - Dashboard Unificado 🎯
+
+**Acceso:** <http://localhost:9983>
+
+Centraliza el acceso a todos tus servicios en un solo lugar.
+
+---
+
+## 📢 Notificaciones
+
+### Configurar Apprise (5 minutos)
+
+#### Opción 1: Discord (Recomendado)
+
+1. Crea webhook en Discord:
+   - Server Settings > Integrations > Webhooks > New Webhook
+2. Edita `apprise/apprise.yml`:
+
+```yaml
+urls:
+  - discord://WEBHOOK_ID/WEBHOOK_TOKEN
+```
+
+#### Opción 2: Telegram
+
+1. Crea bot con @BotFather
+2. Obtén chat_id con @userinfobot
+3. Edita `apprise/apprise.yml`:
+
+```yaml
+urls:
+  - tgram://BOT_TOKEN/CHAT_ID
+```
+
+#### Opción 3: Email
+
+```yaml
+urls:
+  - mailto://tu-email:app-password@gmail.com
+```
+
+### Integrar con Servicios
+
+#### Sonarr/Radarr
+
+1. Settings > Connect > Add > Webhook
+2. URL: `http://apprise:8000/notify/apprise`
+3. Method: POST
+4. Body:
+
+```json
+{
+  "title": "📺 {EventType}",
+  "body": "{Series.Title} - S{Episode.SeasonNumber}E{Episode.EpisodeNumber}\nCalidad: {EpisodeFile.Quality}"
+}
+```
+
+#### Tautulli
+
+1. Settings > Notification Agents > Webhook
+2. URL: `http://apprise:8000/notify/apprise`
+3. Triggers: Playback Start, Recently Added
+
+### Probar Notificaciones
+
+```bash
+curl -X POST http://localhost:8000/notify/apprise \
+  -d "title=Test" \
+  -d "body=Notificaciones funcionando!"
+```
+
+---
+
+## 🧪 Testing y Validación
+
+### Scripts Disponibles
+
+```bash
+# Validar configuración
+./scripts/test-config.sh
+
+# Verificar healthchecks
+./scripts/test-health.sh
+
+# Probar conectividad
+./scripts/test-connectivity.sh
+
+# Crear backup
+./scripts/backup.sh
+
+# Suite completa
+./scripts/run-all-tests.sh
+```
+
+### Antes de Producción
+
+```bash
+# 1. Validar
+./scripts/test-config.sh
+
+# 2. Backup
+./scripts/backup.sh
+
+# 3. Iniciar
+docker-compose up -d
+
+# 4. Esperar 2 minutos
+sleep 120
+
+# 5. Verificar
+./scripts/test-health.sh
+./scripts/test-connectivity.sh
+```
+
+---
+
+## 🌐 Puertos de Acceso
+
+| Servicio | Puerto | URL | Descripción |
+|----------|--------|-----|-------------|
+| **Media Center** ||||
+| Plex | 32400 | <http://localhost:32400/web> | Servidor multimedia |
+| Overseerr | 5055 | <http://localhost:5055> | Solicitar contenido |
+| Sonarr | 8989 | <http://localhost:8989> | Gestión de series |
+| Radarr | 7878 | <http://localhost:7878> | Gestión de películas |
+| Prowlarr | 9696 | <http://localhost:9696> | Indexadores |
+| Bazarr | 6767 | <http://localhost:6767> | Subtítulos |
+| qBittorrent | 8089 | <http://localhost:8089> | Cliente torrents |
+| **Monitoreo** ||||
+| Grafana | 3000 | <http://localhost:3000> | Dashboards |
+| Prometheus | 9090 | <http://localhost:9090> | Métricas |
+| cAdvisor | 8080 | <http://localhost:8080> | Métricas Docker |
+| **Avanzados** ||||
+| Traefik | 8080 | <http://localhost:8080> | Dashboard proxy |
+| Tautulli | 8181 | <http://localhost:8181> | Estadísticas Plex |
+| Apprise | 8000 | <http://localhost:8000> | Notificaciones |
+| Organizr | 9983 | <http://localhost:9983> | Dashboard unificado |
+
+---
+
+## 🔧 Troubleshooting
+
+### Plex no se conecta a mi cuenta
+
+```bash
+# Obtener nuevo claim token (expira en 4 min)
+# Visita: https://www.plex.tv/claim/
+
+# Actualizar .env
+PLEX_CLAIM=claim-nuevo-token
+
+# Reiniciar
+docker-compose restart plex
+```
+
+### Permisos denegados
+
+```bash
+# Verificar PUID/PGID
+id -u  # Debe coincidir con PUID en .env
+id -g  # Debe coincidir con PGID en .env
+
+# Corregir permisos
+sudo chown -R $(id -u):$(id -g) /mnt/nvme/docker-volumes
+sudo chown -R $(id -u):$(id -g) /mnt/DiscoDuro
+```
+
+### Healthcheck failed
+
+```bash
+# Esperar 2 minutos (normal al inicio)
+sleep 120
+
+# Ver logs
+docker-compose logs <servicio>
+
+# Reiniciar
+docker-compose restart <servicio>
+```
+
+### Puerto en uso
+
+```bash
+# Ver qué usa el puerto
+lsof -i :32400
+
+# Detener si es necesario
+docker-compose down
+```
+
+### VPN no conecta
+
+```bash
+# Ver logs
+docker logs gluetun
+
+# Verificar credenciales
+cat .env | grep VPN
+
+# Verificar IP
+docker exec gluetun curl ifconfig.me
+```
+
+### Notificaciones no llegan
+
+```bash
+# Verificar Apprise
+docker ps | grep apprise
+
+# Ver logs
+docker logs apprise
+
+# Probar manualmente
+curl -X POST http://localhost:8000/notify/apprise -d "body=Test"
+
+# Verificar configuración
+cat apprise/apprise.yml
+```
+
+---
+
+## 📝 Comandos Útiles
+
+```bash
+# Iniciar servicios
+docker-compose up -d
+
+# Ver logs en tiempo real
+docker-compose logs -f
+
+# Ver estado
+docker-compose ps
+
+# Reiniciar servicio
+docker-compose restart <servicio>
+
+# Detener todo
+docker-compose down
+
+# Actualizar imágenes
+docker-compose pull
+docker-compose up -d
+
+# Ver uso de recursos
+docker stats
+
+# Limpiar
+docker system prune -a
+```
+
+---
+
+## 🔒 Seguridad
+
+### Seguridad Base
+
+- ✅ Archivo `.env` excluido de Git
+- ✅ Credenciales en variables de entorno
+- ✅ Redes Docker aisladas
+- ✅ Healthchecks automáticos
+- ✅ Límites de recursos
+- ✅ Logging controlado (30MB máx por contenedor)
+- ✅ VPN para torrents (opcional)
+- ✅ SSL automático con Traefik (opcional)
+
+### Seguridad Avanzada (Opcional)
+
+Sistema de seguridad completo disponible en `docker-compose.security.yml`:
+
+**Autenticación y Acceso:**
+
+- **Authelia** - SSO con 2FA (Google Authenticator)
+- **Fail2ban** - Anti fuerza bruta
+
+**Protección:**
+
+- **ClamAV** - Antivirus para descargas
+- **ModSecurity** - Web Application Firewall
+- **CrowdSec** - Detección de intrusiones
+
+**Monitoreo:**
+
+- **Loki + Promtail** - Logs centralizados
+- **Trivy** - Escaneo de vulnerabilidades
+
+**Datos:**
+
+- **Docker Secrets** - Gestión segura de credenciales
+- **Backups Encriptados** - AES-256
+
+**Iniciar servicios de seguridad:**
+
+```bash
+# Generar secrets
+./scripts/security/generate-secrets.sh
+
+# Iniciar servicios de seguridad
+docker-compose -f docker-compose.yml -f docker-compose.security.yml up -d
+
+# Configurar 2FA
+# Accede a: http://localhost:9091
+```
+
+**Documentación completa:** Ver `SECURITY.md`
+
+---
+
+## 📚 Documentación
+
+- **GUIA_PRINCIPIANTES.md** ⭐ - Paso a paso desde cero (instalación, configuración, uso)
+- **SECURITY.md** - Guía completa de seguridad (2FA, antivirus, backups, etc.)
+- **EXTRAS_GUIDE.md** - Servicios extras (Recyclarr, Uptime Kuma, Requestrr, etc.)
+
+---
+
+## 🎯 Próximos Pasos
+
+1. ✅ Configurar servicios base
+2. ✅ Agregar bibliotecas en Plex
+3. ✅ Conectar Prowlarr con Sonarr/Radarr
+4. ✅ Configurar indexadores
+5. ✅ Configurar notificaciones (Apprise)
+6. ✅ Habilitar VPN (Gluetun) si lo deseas
+7. ✅ Configurar SSL (Traefik) para acceso externo
+8. ✅ Monitorear en Grafana
+
+---
+
+## 📊 Características
+
+### Seguridad
+
+- Variables de entorno protegidas
+- Redes aisladas
+- VPN opcional para torrents
+- SSL automático
+
+### Automatización
+
+- Descarga automática de contenido
+- Extracción automática de archivos
+- Actualización automática de contenedores
+- Subtítulos automáticos
+
+### Monitoreo
+
+- Métricas en tiempo real
+- Dashboards de Grafana
+- Healthchecks automáticos
+- Notificaciones inteligentes
+
+### Usabilidad
+
+- Interfaz web para todo
+- Dashboard unificado
+- Solicitudes de usuarios
+- Estadísticas detalladas
+
+---
+
+**Versión:** 2.1.0  
+**Última actualización:** 26 de Octubre, 2025  
+**Mantenido por:** IgriegaL/plexRepo
+
+**¿Necesitas ayuda?** Revisa la sección de [Troubleshooting](#-troubleshooting) o consulta los scripts de testing.

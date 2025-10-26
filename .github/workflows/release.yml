@@ -1,0 +1,129 @@
+name: Crear Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    name: Crear Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Generar Changelog
+        id: changelog
+        run: |
+          # Obtener el tag anterior
+          PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1) 2>/dev/null || echo "")
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            # Primer release
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            # Cambios desde el último tag
+            CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+          
+          # Guardar changelog
+          echo "$CHANGELOG" > CHANGELOG.txt
+          
+          # Categorizar commits
+          FEATURES=$(echo "$CHANGELOG" | grep -i "feat:" || echo "")
+          FIXES=$(echo "$CHANGELOG" | grep -i "fix:" || echo "")
+          DOCS=$(echo "$CHANGELOG" | grep -i "docs:" || echo "")
+          
+          # Crear release notes
+          cat > RELEASE_NOTES.md << EOF
+          ## 🎉 Cambios en esta versión
+          
+          ### ✨ Nuevas Funcionalidades
+          $FEATURES
+          
+          ### 🐛 Correcciones
+          $FIXES
+          
+          ### 📚 Documentación
+          $DOCS
+          
+          ### 📦 Instalación
+          
+          \`\`\`bash
+          git clone https://github.com/${{ github.repository }}.git
+          cd plexRepo
+          cp .env.example .env
+          # Editar .env con tus valores
+          docker-compose up -d
+          \`\`\`
+          
+          ### 📖 Documentación
+          
+          - [README.md](README.md) - Documentación principal
+          - [GUIA_PRINCIPIANTES.md](GUIA_PRINCIPIANTES.md) - Guía paso a paso
+          - [SECURITY.md](SECURITY.md) - Guía de seguridad
+          
+          ### ⚠️ Notas de Actualización
+          
+          Si actualizas desde una versión anterior:
+          
+          1. Crear backup: \`./scripts/backup.sh\`
+          2. Actualizar código: \`git pull\`
+          3. Actualizar imágenes: \`docker-compose pull\`
+          4. Reiniciar: \`docker-compose up -d\`
+          5. Verificar: \`./scripts/test-health.sh\`
+          EOF
+      
+      - name: Crear archivo ZIP
+        run: |
+          # Crear directorio temporal
+          mkdir -p release
+          
+          # Copiar archivos necesarios
+          cp -r \
+            docker-compose*.yml \
+            .env.example \
+            .gitignore \
+            README.md \
+            GUIA_PRINCIPIANTES.md \
+            SECURITY.md \
+            scripts/ \
+            traefik/ \
+            authelia/ \
+            fail2ban/ \
+            loki/ \
+            promtail/ \
+            apprise/ \
+            grafana/ \
+            prometheus.yml \
+            release/
+          
+          # Crear ZIP
+          cd release
+          zip -r ../plexRepo-${{ github.ref_name }}.zip .
+          cd ..
+      
+      - name: Crear Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: RELEASE_NOTES.md
+          files: |
+            plexRepo-${{ github.ref_name }}.zip
+            CHANGELOG.txt
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Notificar en Discord (opcional)
+        if: env.DISCORD_WEBHOOK != ''
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d "{\"content\": \"🎉 Nueva versión liberada: ${{ github.ref_name }}\\n\\nVer: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}\"}" \
+            $DISCORD_WEBHOOK

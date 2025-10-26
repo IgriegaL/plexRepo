@@ -1,0 +1,114 @@
+name: Actualizar Imágenes Docker
+
+on:
+  schedule:
+    # Ejecutar semanalmente los lunes a las 3 AM
+    - cron: '0 3 * * 1'
+  workflow_dispatch:  # Permitir ejecución manual
+
+jobs:
+  check-updates:
+    name: Verificar Actualizaciones
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Verificar nuevas versiones
+        id: check
+        run: |
+          echo "📊 Verificando actualizaciones de imágenes Docker..."
+          
+          # Extraer imágenes
+          IMAGES=$(grep -E "^\s+image:" docker-compose*.yml | awk '{print $2}' | sort -u)
+          
+          UPDATES_AVAILABLE=false
+          
+          for image in $IMAGES; do
+            echo "Verificando: $image"
+            
+            # Pull la imagen para ver si hay actualización
+            if docker pull "$image" 2>&1 | grep -q "Downloaded newer image"; then
+              echo "🆕 Actualización disponible para: $image"
+              UPDATES_AVAILABLE=true
+            else
+              echo "✅ $image está actualizado"
+            fi
+          done
+          
+          echo "updates_available=$UPDATES_AVAILABLE" >> $GITHUB_OUTPUT
+      
+      - name: Crear Issue si hay actualizaciones
+        if: steps.check.outputs.updates_available == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔄 Actualizaciones de imágenes Docker disponibles',
+              body: `Se han detectado actualizaciones para las imágenes Docker.
+              
+              Por favor, revisa y actualiza las imágenes ejecutando:
+              \`\`\`bash
+              docker-compose pull
+              docker-compose up -d
+              \`\`\`
+              
+              O ejecuta el script de actualización:
+              \`\`\`bash
+              ./scripts/update-images.sh
+              \`\`\`
+              
+              **Nota:** Revisa los changelogs antes de actualizar en producción.`,
+              labels: ['dependencies', 'enhancement']
+            })
+
+  test-latest:
+    name: Probar con Últimas Versiones
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Crear .env de prueba
+        run: |
+          cp .env.example .env
+          # Configurar valores de prueba
+          sed -i 's/PLEX_CLAIM=.*/PLEX_CLAIM=claim-test/' .env
+          sed -i 's/GRAFANA_ADMIN_PASSWORD=.*/GRAFANA_ADMIN_PASSWORD=testpass123/' .env
+      
+      - name: Pull últimas imágenes
+        run: docker-compose pull
+      
+      - name: Validar configuración
+        run: docker-compose config
+      
+      - name: Iniciar servicios
+        run: docker-compose up -d
+      
+      - name: Esperar a que servicios inicien
+        run: sleep 60
+      
+      - name: Verificar servicios
+        run: |
+          docker-compose ps
+          
+          # Verificar que los servicios estén corriendo
+          SERVICES=$(docker-compose ps --services)
+          for service in $SERVICES; do
+            STATUS=$(docker-compose ps $service | grep -v "Name" | awk '{print $4}')
+            if [[ "$STATUS" != "Up" ]]; then
+              echo "❌ ERROR: $service no está corriendo"
+              docker-compose logs $service
+              exit 1
+            fi
+            echo "✅ $service está corriendo"
+          done
+      
+      - name: Limpiar
+        if: always()
+        run: docker-compose down -v

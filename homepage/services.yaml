@@ -1,0 +1,99 @@
+# Configuración de Homepage
+# Documentación: https://gethomepage.dev/
+
+---
+# Media Services
+- Media:
+    - Plex:
+        icon: plex.png
+        href: http://{{HOMEPAGE_VAR_PLEX_IP}}:32400/web
+        description: Servidor de Streaming
+        widget:
+          type: plex
+          url: http://plex:32400
+          key: {{HOMEPAGE_VAR_PLEX_TOKEN}}
+
+    - Overseerr:
+        icon: overseerr.png
+        href: http://{{HOMEPAGE_VAR_HOST_IP}}:5055
+        description: Solicitar Contenido
+        widget:
+          type: overseerr
+          url: http://overseerr:5055
+          key: {{HOMEPAGE_VAR_OVERSEERR_API}}
+
+    - Tautulli:
+        icon: tautulli.png
+        href: http://{{HOMEPAGE_VAR_HOST_IP}}:8181
+        description: Estadísticas de Plex
+        widget:
+          type: tautulli
+          url: http://tautulli:8181
+          key: {{HOMEPAGE_VAR_TAUTULLI_API}}
+
+# Download Services
+- Descargas:
+    - Sonarr:
+        icon: sonarr.png
+        href: http://{{HOMEPAGE_VAR_HOST_IP}}:8989
+        description: Series TV
+        widget:
+          type: sonarr
+          url: http://sonarr:8989
+          key: {{HOMEPAGE_VAR_SONARR_API}}
+
+    - Radarr:
+        icon: radarr.png
+        href: http://{{HOMEPAGE_VAR_HOST_IP}}:7878
+        description: Películas
+        widget:
+          type: radarr
+          url: http://radarr:7878
+          key: {{HOMEPAGE_VAR_RADARR_API}}
+
+    - Prowlarr:
+        icon: prowlarr.png
+        href: http://{{HOMEPAGE_VAR_HOST_IP}}:9696
+        description: Indexadores
+        widget:
+          type: prowlarr
+          url: http://prowlarr:9696
+          key: {{HOMEPAGE_VAR_PROWLARR_API}}
+
+    - qBittorrent:
+        icon: qbittorrent.png
+        href: http://{{HOMEPAGE_VAR_HOST_IP}}:8089
+        description: Cliente Torrents
+        widget:
+          type: qbittorrent
+          url: http://qbittorrent:8089
+          username: admin
+          password: {{HOMEPAGE_VAR_QBIT_PASS}}
+
+# Monitoring
+- Monitoreo:
+    - Grafana:
+        icon: grafana.png
+        href: http://{{HOMEPAGE_VAR_HOST_IP}}:3000
+        description: Dashboards
+
+    - Uptime Kuma:
+        icon: uptime-kuma.png
+        href: http://{{HOMEPAGE_VAR_HOST_IP}}:3001
+        description: Estado de Servicios
+        widget:
+          type: uptimekuma
+          url: http://uptime-kuma:3001
+          slug: status
+
+    - Scrutiny:
+        icon: scrutiny.png
+        href: http://{{HOMEPAGE_VAR_HOST_IP}}:8080
+        description: Salud de Discos
+
+# Maintenance
+- Mantenimiento:
+    - Maintainerr:
+        icon: maintainerr.png
+        href: http://{{HOMEPAGE_VAR_HOST_IP}}:6246
+        description: Limpieza Automática

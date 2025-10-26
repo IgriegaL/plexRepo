@@ -1,0 +1,81 @@
+#
+# Configuración de Apprise - URLs de Notificación
+# Documentación: https://github.com/caronc/apprise/wiki
+#
+
+# Formato:
+# urls:
+#   - servicio://credenciales
+
+# ==================== EJEMPLOS ====================
+
+# Discord
+# urls:
+#   - discord://webhook_id/webhook_token
+
+# Telegram
+# urls:
+#   - tgram://bot_token/chat_id
+
+# Email (Gmail)
+# urls:
+#   - mailto://usuario:password@gmail.com
+
+# Slack
+# urls:
+#   - slack://tokenA/tokenB/tokenC
+
+# Pushover
+# urls:
+#   - pover://user@token
+
+# Gotify
+# urls:
+#   - gotify://hostname/token
+
+# ==================== TU CONFIGURACIÓN ====================
+
+# Descomenta y configura los servicios que uses:
+
+urls:
+  # Discord - Obtén webhook en: Server Settings > Integrations > Webhooks
+  # - discord://webhook_id/webhook_token
+  
+  # Telegram - Crea bot con @BotFather y obtén chat_id con @userinfobot
+  # - tgram://bot_token/chat_id
+  
+  # Email
+  # - mailto://usuario:password@gmail.com
+  
+  # Pushover
+  # - pover://user_key@app_token
+
+# ==================== CONFIGURACIÓN AVANZADA ====================
+
+# Tags para filtrar notificaciones
+# tags:
+#   - media      # Para Sonarr/Radarr
+#   - system     # Para Watchtower/Healthchecks
+#   - plex       # Para Tautulli
+
+# Formato de mensajes
+# format: text  # o 'html', 'markdown'
+
+# ==================== EJEMPLO COMPLETO ====================
+
+# urls:
+#   # Discord para todo
+#   - discord://123456789/abcdefghijklmnop
+#   
+#   # Telegram solo para errores críticos
+#   - tgram://123456:ABC-DEF/123456789?priority=high
+#   
+#   # Email para resumen diario
+#   - mailto://mi-email@gmail.com?to=destino@ejemplo.com
+
+# ==================== NOTAS ====================
+
+# 1. Puedes tener múltiples servicios
+# 2. Cada URL puede tener parámetros específicos
+# 3. Ver documentación completa: https://github.com/caronc/apprise/wiki
+# 4. Probar configuración: curl -X POST http://localhost:8000/notify/apprise -d "body=Test"

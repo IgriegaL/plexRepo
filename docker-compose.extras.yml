@@ -1,0 +1,222 @@
+version: "3.9"
+
+# Servicios Extras - Mejoras Adicionales
+# Uso: docker-compose -f docker-compose.yml -f docker-compose.extras.yml up -d
+
+services:
+  # ------------------- Fase 1: Críticos -------------------
+  
+  # Recyclarr - Auto-configuración de Calidad
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:latest
+    container_name: recyclarr
+    restart: unless-stopped
+    user: ${PUID}:${PGID}
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ./recyclarr:/config
+    networks:
+      - media
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Uptime Kuma - Monitoreo Visual Simple
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    restart: unless-stopped
+    volumes:
+      - ./uptime-kuma:/app/data
+    ports:
+      - "3001:3001"
+    networks:
+      - monitoring
+      - media
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uptime.rule=Host(`uptime.${DOMAIN}`)"
+      - "traefik.http.routers.uptime.entrypoints=websecure"
+      - "traefik.http.routers.uptime.tls.certresolver=letsencrypt"
+      - "traefik.http.services.uptime.loadbalancer.server.port=3001"
+
+  # ------------------- Fase 2: Muy Útiles -------------------
+  
+  # Requestrr - Bot de Discord/Telegram
+  requestrr:
+    image: thomst08/requestrr:latest
+    container_name: requestrr
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./requestrr:/root/config
+    ports:
+      - "4545:4545"
+    networks:
+      - media
+    depends_on:
+      - overseerr
+      - sonarr
+      - radarr
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Autoscan - Escaneo Instantáneo de Plex
+  autoscan:
+    image: cloudb0x/autoscan:latest
+    container_name: autoscan
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./autoscan:/config
+      - ${TV_SERIES_VOLUME}:/tv:ro
+      - ${MOVIES_VOLUME}:/movies:ro
+    ports:
+      - "3030:3030"
+    networks:
+      - media
+    depends_on:
+      - plex
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ------------------- Fase 3: Mejoras Visuales -------------------
+  
+  # Kometa - Gestor de Colecciones y Metadata
+  kometa:
+    image: kometateam/kometa:latest
+    container_name: kometa
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - KOMETA_RUN=true
+      - KOMETA_TIME=03:00
+    volumes:
+      - ./kometa:/config
+    networks:
+      - media
+    depends_on:
+      - plex
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Homepage - Dashboard Moderno
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./homepage:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "3002:3000"
+    networks:
+      - media
+      - monitoring
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homepage.rule=Host(`home.${DOMAIN}`)"
+      - "traefik.http.routers.homepage.entrypoints=websecure"
+      - "traefik.http.routers.homepage.tls.certresolver=letsencrypt"
+      - "traefik.http.services.homepage.loadbalancer.server.port=3000"
+
+  # ------------------- Fase 4: Mantenimiento -------------------
+  
+  # Maintainerr - Limpieza Automática
+  maintainerr:
+    image: ghcr.io/jorenn92/maintainerr:latest
+    container_name: maintainerr
+    restart: unless-stopped
+    user: ${PUID}:${PGID}
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ./maintainerr:/opt/data
+    ports:
+      - "6246:6246"
+    networks:
+      - media
+    depends_on:
+      - plex
+      - overseerr
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Scrutiny - Monitoreo de Discos
+  scrutiny:
+    image: ghcr.io/analogj/scrutiny:master-omnibus
+    container_name: scrutiny
+    restart: unless-stopped
+    cap_add:
+      - SYS_RAWIO
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - SCRUTINY_WEB_INFLUXDB_RETENTION_POLICY=true
+    volumes:
+      - ./scrutiny/config:/opt/scrutiny/config
+      - ./scrutiny/influxdb:/opt/scrutiny/influxdb
+      - /run/udev:/run/udev:ro
+    ports:
+      - "8086:8086"  # InfluxDB
+      - "8080:8080"  # Web UI
+    devices:
+      - /dev/sda
+      - /dev/sdb
+      # Agregar tus discos aquí
+    networks:
+      - monitoring
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  media:
+    external: true
+  monitoring:
+    external: true

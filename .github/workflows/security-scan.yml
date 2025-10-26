@@ -1,0 +1,97 @@
+name: Escaneo de Seguridad
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Ejecutar semanalmente los domingos a las 2 AM
+    - cron: '0 2 * * 0'
+
+jobs:
+  trivy-scan:
+    name: Escanear Vulnerabilidades con Trivy
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Ejecutar Trivy en docker-compose.yml
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: 'docker-compose.yml'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Subir resultados a GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+      
+      - name: Escanear imágenes Docker
+        run: |
+          # Extraer imágenes del docker-compose
+          IMAGES=$(grep -E "^\s+image:" docker-compose.yml | awk '{print $2}' | sort -u)
+          
+          for image in $IMAGES; do
+            echo "🔍 Escaneando: $image"
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy:latest image \
+              --severity CRITICAL,HIGH \
+              --exit-code 0 \
+              "$image"
+          done
+
+  secret-scan:
+    name: Detectar Secrets Expuestos
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Escanear con Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Verificar archivos sensibles
+        run: |
+          # Buscar posibles secrets en archivos
+          if grep -r "password.*=" --include="*.yml" --include="*.yaml" --exclude-dir=".git" .; then
+            echo "⚠️ ADVERTENCIA: Se encontraron posibles passwords hardcodeados"
+          fi
+          
+          if grep -r "api.*key.*=" --include="*.yml" --include="*.yaml" --exclude-dir=".git" .; then
+            echo "⚠️ ADVERTENCIA: Se encontraron posibles API keys hardcodeadas"
+          fi
+
+  dependency-check:
+    name: Verificar Dependencias
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Verificar versiones de imágenes
+        run: |
+          echo "📊 Verificando versiones de imágenes Docker..."
+          
+          # Extraer imágenes
+          IMAGES=$(grep -E "^\s+image:" docker-compose*.yml | awk '{print $2}' | sort -u)
+          
+          for image in $IMAGES; do
+            if echo "$image" | grep -q ":latest"; then
+              echo "⚠️ ADVERTENCIA: $image usa tag :latest (no recomendado para producción)"
+            else
+              echo "✅ $image usa tag específico"
+            fi
+          done
