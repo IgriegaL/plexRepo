@@ -64,7 +64,6 @@ jobs:
           ### 📖 Documentación
           
           - [README.md](README.md) - Documentación principal
-          - [GUIA_PRINCIPIANTES.md](GUIA_PRINCIPIANTES.md) - Guía paso a paso
           - [SECURITY.md](SECURITY.md) - Guía de seguridad
           
           ### ⚠️ Notas de Actualización
@@ -89,7 +88,6 @@ jobs:
             .env.example \
             .gitignore \
             README.md \
-            GUIA_PRINCIPIANTES.md \
             SECURITY.md \
             scripts/ \
             grafana/ \

@@ -22,6 +22,22 @@ jobs:
       
       - name: Validar docker-compose.yml
         run: docker-compose config
+
+      - name: Validar servicios permitidos en docker-compose.yml
+        run: |
+          set -e
+          echo "Extrayendo servicios de docker-compose.yml..."
+          SERVICES=$(docker-compose config --services)
+          echo "Servicios detectados: $SERVICES"
+          ALLOWED="plex bazarr qbittorrent sonarr radarr overseerr prowlarr cadvisor node_exporter prometheus grafana"
+          for svc in $SERVICES; do
+            echo "Validando: $svc"
+            if ! echo " $ALLOWED " | grep -qw " $svc "; then
+              echo "ERROR: servicio no permitido detectado: $svc"
+              exit 1
+            fi
+          done
+          echo "Todos los servicios están dentro de los permitidos."
       
       - name: Validar solo docker-compose.yml
         run: docker-compose config
@@ -74,6 +90,16 @@ jobs:
             fi
             echo "✅ Variable $var encontrada"
           done
+
+      - name: Verificar README existe y es mínimo
+        run: |
+          if [ ! -f README.md ]; then
+            echo "❌ ERROR: README.md no existe"
+            exit 1
+          fi
+          if ! grep -q "Plex Minimal" README.md; then
+            echo "⚠️ WARNING: README.md no parece ser la versión minimal. Comprueba que el README describa el alcance actual.";
+          fi
 
   check-security:
     name: Verificar Seguridad
