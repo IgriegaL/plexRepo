@@ -23,23 +23,15 @@ jobs:
       - name: Validar docker-compose.yml
         run: docker-compose config
       
-      - name: Validar docker-compose.advanced.yml
-        run: docker-compose -f docker-compose.advanced.yml config
-      
-      - name: Validar docker-compose.security.yml
-        run: docker-compose -f docker-compose.security.yml config
+      - name: Validar solo docker-compose.yml
+        run: docker-compose config
       
       - name: Validar sintaxis YAML
         uses: ibiqlik/action-yamllint@v3
         with:
           file_or_dir: |
             docker-compose.yml
-            docker-compose.advanced.yml
-            docker-compose.security.yml
-            traefik/
-            authelia/
-            loki/
-            promtail/
+            traefik/  # (si lo añades manualmente)
           config_data: |
             extends: default
             rules:

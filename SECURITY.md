@@ -1,12 +1,69 @@
+# 🔐 Seguridad - Minimal
+
+Este repositorio ha sido simplificado para contener únicamente los servicios que actualmente se están ejecutando en tu Orange Pi (Plex, Sonarr, Radarr, Prowlarr, Bazarr, Overseerr, qBittorrent y el stack de monitorización: Prometheus, Grafana, cAdvisor y Node Exporter).
+
+Resumen de cambios:
+- Se eliminaron (o movieron a versiones anteriores) servicios: Traefik, Authelia, Fail2ban, ClamAV, Trivy, Promtail/Loki y otras utilidades opcionales.
+
+Recomendaciones de seguridad aplicables a esta configuración mínima:
+1. Actualiza imágenes periódicamente:
+   - `docker compose pull && docker compose up -d`
+2. Cambia credenciales por defecto (Grafana, Overseerr, qBittorrent):
+   - Modifica `GRAFANA_ADMIN_PASSWORD` en `.env` y reinicia:
+     `docker compose restart grafana`
+3. Backups de configuración:
+   - Haz copias de seguridad del directorio de volúmenes (ej. `/mnt/nvme/docker-volumes`) antes de cambios grandes.
+4. Firewall y segmentación básica de la red:
+   - Asegúrate de que solo los puertos necesarios (32400, 5055, 8989, 7878, 6767, 3000, 9090, 8081, 9100) estén expuestos y, si es necesario, restringe acceso por IP.
+5. Logs y monitorización:
+   - Grafana y Prometheus se mantienen; revisa métricas y cambios de rendimiento.
+6. Reinstalar herramientas de seguridad opcionales:
+   - Si en el futuro deseas authelia, fail2ban, patch de seguridad o un WAF, restaura los archivos relevantes desde el historial Git o agrégalos de nuevo a `docker-compose.*`.
+
+Comandos útiles para mantenimiento:
+```bash
+# Actualizar y reiniciar
+git pull
+docker compose pull
+docker compose up -d
+
+# Parar y limpiar contenedores y recursos huérfanos
+docker compose down --remove-orphans
+docker system prune -f
+```
+
+Si necesitas ayuda para reactivar alguno de los servicios eliminados, dime cuál y lo dejamos listo con las configuraciones mínimas necesarias.
+# 🔐 Seguridad (Resumen mínimo)
+
+Este repositorio fue reducido para contener únicamente los servicios que actualmente ejecutas en tu Orange Pi.
+La mayoría de las funciones de seguridad avanzadas (Authelia, Fail2ban, ClamAV, Trivy, CrowdSec, Promtail/Loki)
+fueron eliminadas del árbol principal para simplificar la configuración.
+
+Si deseas reactivar o usar funciones de seguridad avanzadas, puedes:
+
+1. Recuperar archivos eliminados desde el historial Git: `git checkout <commit> -- <ruta>`
+2. Añadir solo los servicios necesarios (por ejemplo `authelia`, `fail2ban`) y sus configuraciones.
+3. Generar los secrets según la documentación de cada servicio y actualiza el `.env`.
+
+⚠️ Recomendaciones rápidas de seguridad:
+
+- Cambia los passwords por defecto (Grafana `GRAFANA_ADMIN_PASSWORD`).
+- Usa usuarios con `PUID` y `PGID` correctos y ajusta permisos en directorios de volumen.
+- Mantén tu sistema actualizado y haz backups periódicos.
+
+Este README de seguridad es intencionalmente breve y te dirige a restaurar secciones desde Git si las necesitas.
 # 🔐 Guía de Seguridad
 
 Sistema de seguridad completo para tu servidor multimedia.
 
-## 🎯 Servicios de Seguridad Implementados
+## 🎯 Nota de Estado
 
-### Autenticación y Acceso
-- **Authelia** - SSO con autenticación de dos factores (2FA)
-- **Fail2ban** - Protección contra ataques de fuerza bruta
+> Algunos servicios de seguridad (Authelia, Fail2ban, ClamAV, CrowdSec, Trivy, ModSecurity y demás)
+> han sido deshabilitados y movidos a `/disabled/` para mantener el repositorio alineado con los
+> contenedores que actualmente ejecutas en tu Orange Pi.
+
+Si en el futuro quieres reinstalar alguno, puedes restaurarlo desde la carpeta `/disabled/` o desde el
+historial Git.
 
 ### Protección de Datos
 - **Docker Secrets** - Gestión segura de credenciales
@@ -55,15 +112,10 @@ nano .env
 SECURITY_ALERT_EMAIL=tu-email@ejemplo.com
 ```
 
-### Paso 4: Iniciar Servicios de Seguridad
+### Paso 4: (Deshabilitado actualmente)
 
-```bash
-# Iniciar todos los servicios de seguridad
-docker-compose -f docker-compose.yml -f docker-compose.security.yml up -d
-
-# O solo algunos
-docker-compose -f docker-compose.security.yml up -d authelia fail2ban clamav
-```
+Los pasos para iniciar servicios de seguridad se han deshabilitado en el repo. Si restauras
+`docker-compose.security.yml` o los servicios en `/disabled/`, puedes seguir los pasos anteriores.
 
 ### Paso 5: Configurar 2FA
 

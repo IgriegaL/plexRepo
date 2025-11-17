@@ -33,15 +33,6 @@ secrets/
 *.key
 *.pem
 *.crt
-authelia/db.sqlite3
-authelia/notification.txt
-fail2ban/db/
-clamav/signatures/
-clamav/quarantine/
-trivy/reports/
-loki/
-crowdsec/data/
-modsecurity/logs/
 
 # Backups encriptados
 *-backups-encrypted/
