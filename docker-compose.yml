@@ -8,7 +8,6 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - PLEX_CLAIM=${PLEX_CLAIM}
-      - ADVERTISE_IP=${PLEX_ADVERTISE_IP:-http://192.168.1.100:32400}
     volumes:
       - ${PLEX_CONFIG_VOLUME}:/config
       - ${TV_SERIES_VOLUME}:/tv
