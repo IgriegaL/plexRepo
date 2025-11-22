@@ -31,6 +31,7 @@ services:
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
+    network_mode: "host"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -39,8 +40,6 @@ services:
       - ${JELLYFIN_CONFIG_VOLUME}:/config
       - ${TV_SERIES_VOLUME}:/data/tvshows
       - ${MOVIES_VOLUME}:/data/movies
-    ports:
-      - 8096:8096
     devices:
       - /dev/dri:/dev/dri
     restart: unless-stopped
@@ -57,9 +56,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    networks:
-      - media
-
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
