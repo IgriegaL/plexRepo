@@ -29,6 +29,39 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${JELLYFIN_CONFIG_VOLUME}:/config
+      - ${TV_SERIES_VOLUME}:/data/tvshows
+      - ${MOVIES_VOLUME}:/data/movies
+    ports:
+      - 8096:8096
+    devices:
+      - /dev/dri:/dev/dri
+    restart: unless-stopped
+    mem_limit: 2g
+    cpus: 3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8096/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - media
+
+
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
@@ -317,6 +350,35 @@ services:
         max-file: "3"
     networks:
       - monitoring
+
+  # ------------------- Bootstrap (configuración automática) -------------------
+  bootstrap:
+    image: alpine:3.17
+    container_name: bootstrap
+    volumes:
+      - ./scripts:/scripts
+    entrypoint: ["/bin/sh", "-c", "apk add --no-cache curl jq > /dev/null 2>&1 || true; /scripts/bootstrap.sh"]
+    environment:
+      - SONARR_API_KEY=${SONARR_API_KEY}
+      - RADARR_API_KEY=${RADARR_API_KEY}
+      - PROWLARR_API_KEY=${PROWLARR_API_KEY}
+      - OVERSEERR_API_KEY=${OVERSEERR_API_KEY}
+      - BAZARR_API_KEY=${BAZARR_API_KEY}
+      - QBITTORRENT_WEBUI_PORT=${QBITTORRENT_WEBUI_PORT:-8089}
+      - QBITTORRENT_USER=${QBITTORRENT_USER:-admin}
+      - QBITTORRENT_PASS=${QBITTORRENT_PASS:-adminadmin}
+      - PLEX_URL=${PLEX_URL:-http://plex:32400}
+      - BOOTSTRAP_ENABLE=${BOOTSTRAP_ENABLE:-true}
+    depends_on:
+      - sonarr
+      - radarr
+      - qbittorrent
+      - prowlarr
+      - bazarr
+      - overseerr
+    restart: "no"
+    networks:
+      - media
 
 volumes:
   grafana_data:
