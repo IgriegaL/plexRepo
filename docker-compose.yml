@@ -201,7 +201,6 @@ services:
     mem_limit: 512m
     cpus: 0.5
     depends_on:
-      - plex
       - sonarr
       - radarr
     healthcheck:
