@@ -1,32 +1,32 @@
 services:
   # ------------------- Mediacenter -------------------
-  plex:
-    image: lscr.io/linuxserver/plex:latest
-    container_name: plex
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - PLEX_CLAIM=${PLEX_CLAIM}
-    volumes:
-      - ${PLEX_CONFIG_VOLUME}:/config
-      - ${TV_SERIES_VOLUME}:/tv
-      - ${MOVIES_VOLUME}:/movies
-    network_mode: host
-    restart: unless-stopped
-    mem_limit: 2g
-    cpus: 3
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:32400/web/index.html"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+  # plex:
+  #   image: lscr.io/linuxserver/plex:latest
+  #   container_name: plex
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
+  #     - PLEX_CLAIM=${PLEX_CLAIM}
+  #   volumes:
+  #     - ${PLEX_CONFIG_VOLUME}:/config
+  #     - ${TV_SERIES_VOLUME}:/tv
+  #     - ${MOVIES_VOLUME}:/movies
+  #   network_mode: host
+  #   restart: unless-stopped
+  #   mem_limit: 2g
+  #   cpus: 3
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:32400/web/index.html"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 40s
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
 
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
