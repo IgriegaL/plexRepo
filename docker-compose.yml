@@ -12,10 +12,12 @@ services:
       - ${PLEX_CONFIG_VOLUME}:/config
       - ${TV_SERIES_VOLUME}:/tv
       - ${MOVIES_VOLUME}:/movies
+    devices:
+      - /dev/dri:/dev/dri
     network_mode: host
     restart: unless-stopped
-    mem_limit: 2g
-    cpus: 3
+    mem_limit: 4g
+    cpus: 6
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:32400/web/index.html"]
       interval: 30s
@@ -27,35 +29,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
-  # jellyfin:
-  #   image: lscr.io/linuxserver/jellyfin:latest
-  #   container_name: jellyfin
-  #   network_mode: "host"
-  #   environment:
-  #     - PUID=${PUID}
-  #     - PGID=${PGID}
-  #     - TZ=${TZ}
-  #   volumes:
-  #     - ${JELLYFIN_CONFIG_VOLUME}:/config
-  #     - ${TV_SERIES_VOLUME}:/data/tvshows
-  #     - ${MOVIES_VOLUME}:/data/movies
-  #   devices:
-  #     - /dev/dri:/dev/dri
-  #   restart: unless-stopped
-  #   mem_limit: 1536m
-  #   cpus: 1.5
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8096/health"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 40s
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
@@ -72,8 +45,8 @@ services:
     ports:
       - 6767:6767
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 1g
+    cpus: 1.5
     depends_on:
       - sonarr
       - radarr
@@ -107,8 +80,8 @@ services:
       - 6881:6881
       - 6881:6881/udp
     restart: unless-stopped
-    mem_limit: 1024m
-    cpus: 0.5
+    mem_limit: 2g
+    cpus: 2
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8089"]
       interval: 30s
@@ -136,8 +109,8 @@ services:
     ports:
       - 8989:8989
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 1g
+    cpus: 1.5
     depends_on:
       - prowlarr
       - qbittorrent
@@ -168,8 +141,8 @@ services:
     ports:
       - 7878:7878
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 1g
+    cpus: 1.5
     depends_on:
       - prowlarr
       - qbittorrent
@@ -198,8 +171,8 @@ services:
     ports:
       - 5055:5055
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 1g
+    cpus: 1.5
     depends_on:
       - sonarr
       - radarr
@@ -228,8 +201,8 @@ services:
     ports:
       - 9696:9696
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    mem_limit: 1g
+    cpus: 1.5
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9696"]
       interval: 30s
@@ -240,137 +213,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    networks:
-      - media
-
-  # ------------------- Monitoreo -------------------
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    container_name: cadvisor
-    ports:
-      - 8081:8080
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - monitoring
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  node_exporter:
-    image: prom/node-exporter:latest
-    container_name: node_exporter
-    ports:
-      - 9100:9100
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - monitoring
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9100/-/ready"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    volumes:
-      - prometheus_data:/prometheus
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - 9090:9090
-    restart: unless-stopped
-    depends_on:
-      - cadvisor
-      - node_exporter
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - monitoring
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
-    ports:
-      - 3000:3000
-    restart: unless-stopped
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
-    depends_on:
-      - prometheus
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - monitoring
-
-  # ------------------- Bootstrap (configuración automática) -------------------
-  bootstrap:
-    image: alpine:3.17
-    container_name: bootstrap
-    volumes:
-      - ./scripts:/scripts
-    entrypoint: ["/bin/sh", "-c", "apk add --no-cache curl jq > /dev/null 2>&1 || true; /scripts/bootstrap.sh"]
-    environment:
-      - SONARR_API_KEY=${SONARR_API_KEY}
-      - RADARR_API_KEY=${RADARR_API_KEY}
-      - PROWLARR_API_KEY=${PROWLARR_API_KEY}
-      - OVERSEERR_API_KEY=${OVERSEERR_API_KEY}
-      - BAZARR_API_KEY=${BAZARR_API_KEY}
-      - QBITTORRENT_WEBUI_PORT=${QBITTORRENT_WEBUI_PORT:-8089}
-      - QBITTORRENT_USER=${QBITTORRENT_USER:-admin}
-      - QBITTORRENT_PASS=${QBITTORRENT_PASS:-adminadmin}
-      - PLEX_URL=${PLEX_URL:-http://plex:32400}
-      - BOOTSTRAP_ENABLE=${BOOTSTRAP_ENABLE:-true}
-    depends_on:
-      - sonarr
-      - radarr
-      - qbittorrent
-      - prowlarr
-      - bazarr
-      - overseerr
-    restart: "no"
     networks:
       - media
 
