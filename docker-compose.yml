@@ -216,12 +216,6 @@ services:
     networks:
       - media
 
-volumes:
-  grafana_data:
-  prometheus_data:
-
 networks:
   media:
-    driver: bridge
-  monitoring:
     driver: bridge
