@@ -45,7 +45,7 @@ services:
     ports:
       - 6767:6767
     restart: unless-stopped
-    mem_limit: 1g
+    mem_limit: 600m
     cpus: 1.5
     depends_on:
       - sonarr
@@ -80,7 +80,7 @@ services:
       - 6881:6881
       - 6881:6881/udp
     restart: unless-stopped
-    mem_limit: 2g
+    mem_limit: 1g
     cpus: 2
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8089"]
@@ -109,7 +109,7 @@ services:
     ports:
       - 8989:8989
     restart: unless-stopped
-    mem_limit: 1g
+    mem_limit: 500m
     cpus: 1.5
     depends_on:
       - prowlarr
@@ -141,7 +141,7 @@ services:
     ports:
       - 7878:7878
     restart: unless-stopped
-    mem_limit: 1g
+    mem_limit: 500m
     cpus: 1.5
     depends_on:
       - prowlarr
@@ -171,7 +171,7 @@ services:
     ports:
       - 5055:5055
     restart: unless-stopped
-    mem_limit: 1g
+    mem_limit: 600m
     cpus: 1.5
     depends_on:
       - sonarr
@@ -201,7 +201,7 @@ services:
     ports:
       - 9696:9696
     restart: unless-stopped
-    mem_limit: 1g
+    mem_limit: 600m
     cpus: 1.5
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9696"]
