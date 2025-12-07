@@ -5,6 +5,7 @@ Complete media server stack optimized for **Orange Pi 5 Pro (RK3588)** using Doc
 ## 🚀 Features
 
 *   **Media Center:** Plex (with hardware transcoding), Sonarr, Radarr, Bazarr, Prowlarr, Overseerr, qBittorrent.
+*   **Photos/Videos:** Immich (Self-hosted photo/video management).
 *   **Management:** Portainer (Docker UI), Watchtower (Automatic updates), Dozzle (Real-time logs).
 *   **Networking:** Gluetun (VPN for secure downloads).
 *   **Automation:** `bootstrap` script for auto-configuring connections between services.
@@ -35,8 +36,8 @@ Complete media server stack optimized for **Orange Pi 5 Pro (RK3588)** using Doc
 3.  **Create directories:**
     ```bash
     # Adjust paths according to your .env
-    sudo mkdir -p /mnt/nvme/docker-volumes/{plex,sonarr,radarr,bazarr,prowlarr,overseerr,qbittorrent,portainer,gluetun}
-    sudo mkdir -p /mnt/DiscoDuro/{tvserie,movies,downloads}
+    sudo mkdir -p /mnt/nvme/docker-volumes/{plex,sonarr,radarr,bazarr,prowlarr,overseerr,qbittorrent,portainer,gluetun,immich-postgres}
+    sudo mkdir -p /mnt/DiscoDuro/{tvserie,movies,downloads,immich/uploads}
     sudo chown -R 1000:1000 /mnt/nvme/docker-volumes /mnt/DiscoDuro
     ```
 
@@ -61,6 +62,7 @@ The `bootstrap` service runs at startup and automatically attempts to connect yo
 | Service | Port | Description |
 | :--- | :--- | :--- |
 | **Plex** | `32400` | Media Server |
+| **Immich** | `2283` | Photo/Video Management |
 | **Overseerr** | `5055` | Content Request |
 | **Portainer** | `9000` | Docker Management |
 | **Dozzle** | `8080` | Logs Viewer |
