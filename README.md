@@ -1,80 +1,80 @@
-# 🍊 Plex Media Server 
+# 🍊 Plex Media Server
 
-Stack completo de servidor de medios optimizado para **Orange Pi 5 Pro (RK3588)** usando Docker Compose.
+Complete media server stack optimized for **Orange Pi 5 Pro (RK3588)** using Docker Compose.
 
-## 🚀 Características
+## 🚀 Features
 
-*   **Media Center:** Plex (con transcodificación por hardware), Sonarr, Radarr, Bazarr, Prowlarr, Overseerr, qBittorrent.
-*   **Gestión:** Portainer (UI Docker), Watchtower (Actualizaciones automáticas), Dozzle (Logs en tiempo real).
-*   **Red:** Gluetun (VPN para descargas seguras).
-*   **Automatización:** Script `bootstrap` para autoconfigurar conexiones entre servicios.
+*   **Media Center:** Plex (with hardware transcoding), Sonarr, Radarr, Bazarr, Prowlarr, Overseerr, qBittorrent.
+*   **Management:** Portainer (Docker UI), Watchtower (Automatic updates), Dozzle (Real-time logs).
+*   **Networking:** Gluetun (VPN for secure downloads).
+*   **Automation:** `bootstrap` script for auto-configuring connections between services.
 
-## 📋 Requisitos
+## 📋 Requirements
 
-*   **Hardware:** Orange Pi 5 Pro (o similar con RK3588).
-*   **Almacenamiento:**
-    *   NVMe SSD (Recomendado para configs/bases de datos).
-    *   HDD (Para almacenamiento de medios).
-*   **Software:** Docker y Docker Compose instalados.
+*   **Hardware:** Orange Pi 5 Pro (or similar with RK3588).
+*   **Storage:**
+    *   NVMe SSD (Recommended for configs/databases).
+    *   HDD (For media storage).
+*   **Software:** Docker and Docker Compose installed.
 
-## 🛠️ Instalación Rápida
+## 🛠️ Quick Installation
 
-1.  **Clonar repositorio:**
+1.  **Clone repository:**
     ```bash
-    git clone <tu-repo>
+    git clone <your-repo>
     cd plexRepo
     ```
 
-2.  **Configurar entorno:**
+2.  **Configure environment:**
     ```bash
     cp .env.example .env
     nano .env
     ```
-    *Rellena las rutas de tus discos y, opcionalmente, tus credenciales de VPN.*
+    *Fill in your disk paths and, optionally, your VPN credentials.*
 
-3.  **Crear directorios:**
+3.  **Create directories:**
     ```bash
-    # Ajusta las rutas según tu .env
+    # Adjust paths according to your .env
     sudo mkdir -p /mnt/nvme/docker-volumes/{plex,sonarr,radarr,bazarr,prowlarr,overseerr,qbittorrent,portainer,gluetun}
     sudo mkdir -p /mnt/DiscoDuro/{tvserie,movies,downloads}
     sudo chown -R 1000:1000 /mnt/nvme/docker-volumes /mnt/DiscoDuro
     ```
 
-4.  **Iniciar:**
+4.  **Start:**
     ```bash
     docker compose up -d
     ```
 
-## 🤖 Autoconfiguración (Bootstrap)
+## 🤖 Auto-Configuration (Bootstrap)
 
-El servicio `bootstrap` se ejecuta al inicio e intenta conectar tus aplicaciones automáticamente.
+The `bootstrap` service runs at startup and automatically attempts to connect your applications.
 
-1.  La primera vez que inicies, entra a Sonarr, Radarr y Prowlarr para obtener sus **API Keys**.
-2.  Añádelas a tu archivo `.env`.
-3.  Reinicia el stack: `docker compose up -d`.
-4.  El script configurará automáticamente:
+1.  The first time you start, access Sonarr, Radarr, and Prowlarr to obtain their **API Keys**.
+2.  Add them to your `.env` file.
+3.  Restart the stack: `docker compose up -d`.
+4.  The script will automatically configure:
     *   Sonarr/Radarr → qBittorrent
     *   Prowlarr → Sonarr/Radarr
 
-## 🌐 Puertos Principales
+## 🌐 Main Ports
 
-| Servicio | Puerto | Descripción |
+| Service | Port | Description |
 | :--- | :--- | :--- |
-| **Plex** | `32400` | Servidor de Medios |
-| **Overseerr** | `5055` | Solicitud de contenido |
-| **Portainer** | `9000` | Gestión de Docker |
-| **Dozzle** | `8080` | Visor de Logs |
-| **Sonarr** | `8989` | Series de TV |
-| **Radarr** | `7878` | Películas |
-| **qBittorrent** | `8089` | Cliente Torrent |
+| **Plex** | `32400` | Media Server |
+| **Overseerr** | `5055` | Content Request |
+| **Portainer** | `9000` | Docker Management |
+| **Dozzle** | `8080` | Logs Viewer |
+| **Sonarr** | `8989` | TV Series |
+| **Radarr** | `7878` | Movies |
+| **qBittorrent** | `8089` | Torrent Client |
 
-## 🔒 VPN (Opcional)
+## 🔒 VPN (Optional)
 
-Para enrutar qBittorrent por VPN:
-1.  Configura `VPN_SERVICE_PROVIDER`, `VPN_USER` y `VPN_PASSWORD` en `.env`.
-2.  En `docker-compose.yml`, descomenta la configuración de red en el servicio `qbittorrent` para usar `service:gluetun`.
+To route qBittorrent through VPN:
+1.  Configure `VPN_SERVICE_PROVIDER`, `VPN_USER`, and `VPN_PASSWORD` in `.env`.
+2.  In `docker-compose.yml`, uncomment the network configuration in the `qbittorrent` service to use `service:gluetun`.
 
-## 🔄 Mantenimiento
+## 🔄 Maintenance
 
-*   **Actualizaciones:** Watchtower actualiza los contenedores automáticamente cada día a las 4 AM.
-*   **Backups:** Ejecuta `./scripts/backup.sh` para respaldar tus configuraciones.
+*   **Updates:** Watchtower automatically updates containers every day at 4 AM.
+*   **Backups:** Run `./scripts/backup.sh` to backup your configurations.
