@@ -66,6 +66,7 @@ if [ -z "$EXISTING_CLIENT" ]; then
             },
             \"configContract\": \"QBittorrentSettings\",
             \"implementationName\": \"qBittorrent\",
+            \"removeCompleted\": true,
             \"infoLink\": \"https://wiki.servarr.com/sonarr/supported#qbittorrent\",
             \"tags\": []
         }" > /dev/null
@@ -98,6 +99,7 @@ if [ -z "$EXISTING_CLIENT_RADARR" ]; then
             },
             \"configContract\": \"QBittorrentSettings\",
             \"implementationName\": \"qBittorrent\",
+            \"removeCompleted\": true,
             \"infoLink\": \"https://wiki.servarr.com/radarr/supported#qbittorrent\",
             \"tags\": []
         }" > /dev/null
