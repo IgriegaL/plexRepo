@@ -4,10 +4,11 @@ Complete media server stack optimized for **Orange Pi 5 Pro (RK3588)** using Doc
 
 ## 🚀 Features
 
-*   **Media Center:** Plex (with hardware transcoding), Sonarr, Radarr, Bazarr, Prowlarr, Overseerr, qBittorrent.
+*   **Media Center:** Plex (Hardware Transcoding), Sonarr, Radarr, Bazarr, Prowlarr, Overseerr, qBittorrent, Tautulli.
 *   **Photos/Videos:** Immich (Self-hosted photo/video management).
-*   **Management:** Portainer (Docker UI), Watchtower (Automatic updates), Dozzle (Real-time logs).
-*   **Networking:** Gluetun (VPN for secure downloads).
+*   **Utilities:** Unpackerr (Auto-extract), Flaresolverr (Cloudflare solver).
+*   **Access & Security:** Caddy (Reverse Proxy), Tailscale (Secure Remote Access).
+*   **Management:** Portainer (Docker UI), Dozzle (Real-time logs).
 *   **Automation:** `bootstrap` script for auto-configuring connections between services.
 
 ## 📋 Requirements
@@ -31,12 +32,12 @@ Complete media server stack optimized for **Orange Pi 5 Pro (RK3588)** using Doc
     cp .env.example .env
     nano .env
     ```
-    *Fill in your disk paths and, optionally, your VPN credentials.*
+    *Fill in your disk paths, API Keys, and Tailscale Auth Key.*
 
 3.  **Create directories:**
     ```bash
     # Adjust paths according to your .env
-    sudo mkdir -p /mnt/nvme/docker-volumes/{plex,sonarr,radarr,bazarr,prowlarr,overseerr,qbittorrent,portainer,gluetun,immich-postgres}
+    sudo mkdir -p /mnt/nvme/docker-volumes/{plex,sonarr,radarr,bazarr,prowlarr,overseerr,qbittorrent,portainer,gluetun,immich-postgres,tautulli,tailscale,npm-data,npm-letsencrypt}
     sudo mkdir -p /mnt/DiscoDuro/{tvserie,movies,downloads,immich/uploads}
     sudo chown -R 1000:1000 /mnt/nvme/docker-volumes /mnt/DiscoDuro
     ```
@@ -46,6 +47,23 @@ Complete media server stack optimized for **Orange Pi 5 Pro (RK3588)** using Doc
     docker compose up -d
     ```
 
+## 🌐 Access (via Tailscale & Caddy)
+
+Once connected to your Tailscale network, you can access services using friendly names.
+*Default hostname:* `plex-server` (You can change this in `docker-compose.yml` and `Caddyfile`).
+
+| Service | URL | Description |
+| :--- | :--- | :--- |
+| **Overseerr** | `http://plex-server` | Request Content (Home) |
+| **Plex** | `http://plex.plex-server` | Media Server |
+| **Immich** | `http://immich.plex-server` | Photos & Videos |
+| **Sonarr** | `http://sonarr.plex-server` | TV Series |
+| **Radarr** | `http://radarr.plex-server` | Movies |
+| **Tautulli** | `http://tautulli.plex-server` | Plex Statistics |
+| **Portainer** | `http://portainer.plex-server` | Docker Management |
+
+*Note: You can still access via IP:Port if needed.*
+
 ## 🤖 Auto-Configuration (Bootstrap)
 
 The `bootstrap` service runs at startup and automatically attempts to connect your applications.
@@ -54,29 +72,21 @@ The `bootstrap` service runs at startup and automatically attempts to connect yo
 2.  Add them to your `.env` file.
 3.  Restart the stack: `docker compose up -d`.
 4.  The script will automatically configure:
-    *   Sonarr/Radarr → qBittorrent
+    *   Sonarr/Radarr → qBittorrent (with "Remove Completed" enabled)
     *   Prowlarr → Sonarr/Radarr
 
-## 🌐 Main Ports
+## ⚙️ Resource Management
 
-| Service | Port | Description |
-| :--- | :--- | :--- |
-| **Plex** | `32400` | Media Server |
-| **Immich** | `2283` | Photo/Video Management |
-| **Overseerr** | `5055` | Content Request |
-| **Portainer** | `9000` | Docker Management |
-| **Dozzle** | `8080` | Logs Viewer |
-| **Sonarr** | `8989` | TV Series |
-| **Radarr** | `7878` | Movies |
-| **qBittorrent** | `8089` | Torrent Client |
+Containers are configured with CPU and RAM limits to ensure stability on the Orange Pi 5 Pro:
+*   **Plex:** 4GB RAM / 6 CPUs
+*   **Immich:** 2GB RAM / 2 CPUs
+*   **Others:** Optimized for low footprint.
 
-## 🔒 VPN (Optional)
+## 🔒 Remote Access
 
-To route qBittorrent through VPN:
-1.  Configure `VPN_SERVICE_PROVIDER`, `VPN_USER`, and `VPN_PASSWORD` in `.env`.
-2.  In `docker-compose.yml`, uncomment the network configuration in the `qbittorrent` service to use `service:gluetun`.
+*   **Tailscale:** Included for secure remote access without opening ports.
+*   **Direct Play:** Configure Plex clients to "Maximum Quality" to avoid transcoding over the VPN.
 
 ## 🔄 Maintenance
 
-*   **Updates:** Watchtower automatically updates containers every day at 4 AM.
 *   **Backups:** Run `./scripts/backup.sh` to backup your configurations.
