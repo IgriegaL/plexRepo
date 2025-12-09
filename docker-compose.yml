@@ -288,7 +288,7 @@ services:
     cpus: 1
     ports:
       - "8080:8080"
-      - "443:443"
+      - "8443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
