@@ -189,6 +189,35 @@ services:
     networks:
       - media
 
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${TAUTULLI_CONFIG_VOLUME}:/config
+    ports:
+      - 8181:8181
+    restart: unless-stopped
+    mem_limit: 500m
+    cpus: 1
+    depends_on:
+      - plex
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8181"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - media
+
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
@@ -307,6 +336,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
     env_file:
       - .env
+    environment:
+      - REDIS_HOSTNAME=immich-redis
+      - DB_HOSTNAME=immich-postgres
     ports:
       - 2283:2283
     depends_on:
