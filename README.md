@@ -54,13 +54,13 @@ Once connected to your Tailscale network, you can access services using friendly
 
 | Service | URL | Description |
 | :--- | :--- | :--- |
-| **Overseerr** | `http://plex-server` | Request Content (Home) |
-| **Plex** | `http://plex.plex-server` | Media Server |
-| **Immich** | `http://immich.plex-server` | Photos & Videos |
-| **Sonarr** | `http://sonarr.plex-server` | TV Series |
-| **Radarr** | `http://radarr.plex-server` | Movies |
-| **Tautulli** | `http://tautulli.plex-server` | Plex Statistics |
-| **Portainer** | `http://portainer.plex-server` | Docker Management |
+| **Overseerr** | `http://plex-server:8080` | Request Content (Home) |
+| **Plex** | `http://plex.plex-server:8080` | Media Server |
+| **Immich** | `http://immich.plex-server:8080` | Photos & Videos |
+| **Sonarr** | `http://sonarr.plex-server:8080` | TV Series |
+| **Radarr** | `http://radarr.plex-server:8080` | Movies |
+| **Tautulli** | `http://tautulli.plex-server:8080` | Plex Statistics |
+| **Portainer** | `http://portainer.plex-server:8080` | Docker Management |
 
 *Note: You can still access via IP:Port if needed.*
 

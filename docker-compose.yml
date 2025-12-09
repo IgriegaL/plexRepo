@@ -268,7 +268,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - 8080:8080
+      - 8888:8080
     restart: unless-stopped
     mem_limit: 100m
     cpus: 0.5
@@ -287,7 +287,7 @@ services:
     mem_limit: 200m
     cpus: 1
     ports:
-      - "80:80"
+      - "8080:8080"
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile

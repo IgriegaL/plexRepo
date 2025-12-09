@@ -4,55 +4,55 @@
 }
 
 # Acceso principal (Dashboard o Overseerr)
-http://plex-server {
+http://plex-server:8080 {
     reverse_proxy overseerr:5055
 }
 
 # Servicios
-http://plex.plex-server {
+http://plex.plex-server:8080 {
     reverse_proxy plex:32400
 }
 
-http://sonarr.plex-server {
+http://sonarr.plex-server:8080 {
     reverse_proxy sonarr:8989
 }
 
-http://radarr.plex-server {
+http://radarr.plex-server:8080 {
     reverse_proxy radarr:7878
 }
 
-http://bazarr.plex-server {
+http://bazarr.plex-server:8080 {
     reverse_proxy bazarr:6767
 }
 
-http://prowlarr.plex-server {
+http://prowlarr.plex-server:8080 {
     reverse_proxy prowlarr:9696
 }
 
-http://overseerr.plex-server {
+http://overseerr.plex-server:8080 {
     reverse_proxy overseerr:5055
 }
 
-http://qbittorrent.plex-server {
+http://qbittorrent.plex-server:8080 {
     reverse_proxy qbittorrent:8089
 }
 
-http://tautulli.plex-server {
+http://tautulli.plex-server:8080 {
     reverse_proxy tautulli:8181
 }
 
-http://immich.plex-server {
+http://immich.plex-server:8080 {
     reverse_proxy immich-server:2283
 }
 
-http://portainer.plex-server {
+http://portainer.plex-server:8080 {
     reverse_proxy portainer:9000
 }
 
-http://dozzle.plex-server {
+http://dozzle.plex-server:8080 {
     reverse_proxy dozzle:8080
 }
 
-http://flaresolverr.plex-server {
+http://flaresolverr.plex-server:8080 {
     reverse_proxy flaresolverr:8191
 }
