@@ -4,7 +4,7 @@
 }
 
 # Acceso principal (Dashboard o Overseerr)
-http://plex-server:8080 {
+http://plex-server:8080, http://100.82.250.79:8080 {
     reverse_proxy overseerr:5055
 }
 
