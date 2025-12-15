@@ -77,10 +77,48 @@ The `bootstrap` service runs at startup and automatically attempts to connect yo
 
 ## ⚙️ Resource Management
 
-Containers are configured with CPU and RAM limits to ensure stability on the Orange Pi 5 Pro:
-*   **Plex:** 4GB RAM / 6 CPUs
-*   **Immich:** 2GB RAM / 2 CPUs
-*   **Others:** Optimized for low footprint.
+Containers are configured with **optimized CPU and RAM limits** to prevent system crashes on the Orange Pi 5 Pro (8GB RAM, 8 cores):
+
+### Current Resource Allocation:
+*   **Plex:** 3GB RAM / 3 CPUs (reduced to prevent crashes during transcoding)
+*   **Immich Server:** 1.5GB RAM / 1.5 CPUs
+*   **Immich ML:** 1GB RAM / 1 CPU (reduced to prevent OOM kills)
+*   **qBittorrent:** 800MB RAM / 1.5 CPUs
+*   **Bazarr:** 500MB RAM / 1 CPU
+*   **Sonarr/Radarr:** 400MB RAM / 1 CPU each
+*   **Overseerr/Prowlarr/Tautulli:** 500MB RAM / 1 CPU each
+*   **Others:** Optimized for minimal footprint
+
+**Total:** ~9.3GB RAM / 15 CPUs (within safe limits for your hardware)
+
+### ⚠️ Important Stability Notes:
+
+1.  **Swap Configuration (Recommended):**
+    If your system crashes with "Out of Memory" errors, enable swap:
+    ```bash
+    sudo fallocate -l 4G /swapfile
+    sudo chmod 600 /swapfile
+    sudo mkswap /swapfile
+    sudo swapon /swapfile
+    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+    ```
+
+2.  **Monitor Resources:**
+    Check system health with:
+    ```bash
+    ./scripts/monitor.sh
+    ```
+
+3.  **Reduce Transcoding Load:**
+    In Plex settings:
+    *   Disable "Use hardware acceleration" if crashes persist
+    *   Set "Transcoder temporary directory" to `/tmp` (uses RAM, faster)
+    *   Limit "Maximum simultaneous video transcode" to 1-2
+
+4.  **Immich Processing:**
+    If Immich ML causes crashes:
+    *   Disable machine learning in Immich settings
+    *   Or stop `immich-machine-learning` container: `docker stop immich_machine_learning`
 
 ## 🔒 Remote Access
 

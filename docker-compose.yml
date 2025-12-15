@@ -16,8 +16,8 @@ services:
       - /dev/dri:/dev/dri
     network_mode: host
     restart: unless-stopped
-    mem_limit: 4g
-    cpus: 6
+    mem_limit: 3g
+    cpus: 3
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:32400/web/index.html"]
       interval: 30s
@@ -80,8 +80,8 @@ services:
       - 6881:6881
       - 6881:6881/udp
     restart: unless-stopped
-    mem_limit: 1g
-    cpus: 2
+    mem_limit: 800m
+    cpus: 1.5
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8089"]
       interval: 30s
@@ -109,8 +109,8 @@ services:
     ports:
       - 8989:8989
     restart: unless-stopped
-    mem_limit: 500m
-    cpus: 1.5
+    mem_limit: 400m
+    cpus: 1
     depends_on:
       - prowlarr
       - qbittorrent
@@ -141,8 +141,8 @@ services:
     ports:
       - 7878:7878
     restart: unless-stopped
-    mem_limit: 500m
-    cpus: 1.5
+    mem_limit: 400m
+    cpus: 1
     depends_on:
       - prowlarr
       - qbittorrent
@@ -171,8 +171,8 @@ services:
     ports:
       - 5055:5055
     restart: unless-stopped
-    mem_limit: 600m
-    cpus: 1.5
+    mem_limit: 500m
+    cpus: 1
     depends_on:
       - sonarr
       - radarr
@@ -230,8 +230,8 @@ services:
     ports:
       - 9696:9696
     restart: unless-stopped
-    mem_limit: 600m
-    cpus: 1.5
+    mem_limit: 500m
+    cpus: 1
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9696"]
       interval: 30s
@@ -326,8 +326,8 @@ services:
       - immich-redis
       - immich-postgres
     restart: unless-stopped
-    mem_limit: 2g
-    cpus: 2
+    mem_limit: 1.5g
+    cpus: 1.5
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:2283"]
       interval: 30s
@@ -349,8 +349,8 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-    mem_limit: 1.5g
-    cpus: 2
+    mem_limit: 1g
+    cpus: 1
     healthcheck:
       disable: true
     logging:
