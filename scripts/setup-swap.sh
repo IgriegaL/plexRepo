@@ -17,15 +17,36 @@ if [ "$(swapon --show | wc -l)" -gt 0 ]; then
     echo "⚠️  Ya existe swap configurado:"
     swapon --show
     echo ""
-    read -p "¿Desea reemplazarlo? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Operación cancelada."
-        exit 0
+    
+    # Verificar cuánto swap está en uso
+    SWAP_USED=$(free -m | awk '/^Swap/{print $3}')
+    if [ "$SWAP_USED" -gt 100 ]; then
+        echo "⚠️  Swap en uso: ${SWAP_USED}MB"
+        echo "   Para cambiar el tamaño sin interrupciones:"
+        echo "   1. Reinicie el sistema primero"
+        echo "   2. Ejecute este script de nuevo"
+        echo ""
+        read -p "¿Continuar de todas formas? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Operación cancelada."
+            exit 0
+        fi
+    else
+        read -p "¿Desea reemplazarlo? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Operación cancelada."
+            exit 0
+        fi
     fi
     
-    echo "Desactivando swap actual..."
-    swapoff -a
+    echo "Desactivando swap actual (esto puede tomar tiempo)..."
+    swapoff -a 2>/dev/null || {
+        echo "❌ Error: No se pudo desactivar swap (sistema bajo presión de memoria)"
+        echo "   Libere memoria primero o reinicie el sistema."
+        exit 1
+    }
     rm -f "$SWAP_FILE"
 fi
 
