@@ -437,6 +437,53 @@ volumes:
   immich-model-cache:
   caddy_data:
   caddy_config:
+  netdataconfig:
+  netdatalib:
+  netdatacache:
+
+  # ------------------- Monitoreo -------------------
+  netdata:
+    image: netdata/netdata:latest
+    container_name: netdata
+    hostname: orangepi5-plex
+    ports:
+      - 19999:19999
+    restart: unless-stopped
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - ./netdata.conf:/etc/netdata/netdata.conf:ro
+      - netdataconfig:/etc/netdata
+      - netdatalib:/var/lib/netdata
+      - netdatacache:/var/cache/netdata
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /var/log:/host/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - NETDATA_CLAIM_TOKEN=${NETDATA_CLAIM_TOKEN:-}
+      - NETDATA_CLAIM_URL=https://app.netdata.cloud
+      - DOCKER_HOST=/var/run/docker.sock
+      # Retención de datos: 24 horas (86400 segundos)
+      - NETDATA_EXTRA_DEB_PACKAGES=
+      - NETDATA_EXTRA_APK_PACKAGES=
+    mem_limit: 200m
+    cpus: 0.5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
 
 networks:
   media:
