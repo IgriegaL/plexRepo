@@ -5,7 +5,6 @@ Complete media server stack optimized for **Orange Pi 5 Pro (RK3588)** using Doc
 ## 🚀 Features
 
 *   **Media Center:** Plex (Hardware Transcoding), Sonarr, Radarr, Bazarr, Prowlarr, Overseerr, qBittorrent, Tautulli.
-*   **Photos/Videos:** Immich (Self-hosted photo/video management).
 *   **Utilities:** Unpackerr (Auto-extract), Flaresolverr (Cloudflare solver).
 *   **Access & Security:** Caddy (Reverse Proxy), Tailscale (Secure Remote Access).
 *   **Management:** Portainer (Docker UI), Dozzle (Real-time logs).
@@ -37,8 +36,8 @@ Complete media server stack optimized for **Orange Pi 5 Pro (RK3588)** using Doc
 3.  **Create directories:**
     ```bash
     # Adjust paths according to your .env
-    sudo mkdir -p /mnt/nvme/docker-volumes/{plex,sonarr,radarr,bazarr,prowlarr,overseerr,qbittorrent,portainer,gluetun,immich-postgres,tautulli,tailscale,npm-data,npm-letsencrypt}
-    sudo mkdir -p /mnt/DiscoDuro/{tvserie,movies,downloads,immich/uploads}
+    sudo mkdir -p /mnt/nvme/docker-volumes/{plex,sonarr,radarr,bazarr,prowlarr,overseerr,qbittorrent,portainer,gluetun,tautulli,tailscale,npm-data,npm-letsencrypt}
+    sudo mkdir -p /mnt/DiscoDuro/{tvserie,movies,downloads}
     sudo chown -R 1000:1000 /mnt/nvme/docker-volumes /mnt/DiscoDuro
     ```
 
@@ -56,7 +55,6 @@ Once connected to your Tailscale network, you can access services using friendly
 | :--- | :--- | :--- |
 | **Overseerr** | `http://plex-server:8080` | Request Content (Home) |
 | **Plex** | `http://plex.plex-server:8080` | Media Server |
-| **Immich** | `http://immich.plex-server:8080` | Photos & Videos |
 | **Sonarr** | `http://sonarr.plex-server:8080` | TV Series |
 | **Radarr** | `http://radarr.plex-server:8080` | Movies |
 | **Tautulli** | `http://tautulli.plex-server:8080` | Plex Statistics |
@@ -81,8 +79,6 @@ Containers are configured with **optimized CPU and RAM limits** to prevent syste
 
 ### Current Resource Allocation:
 *   **Plex:** 3GB RAM / 3 CPUs (reduced to prevent crashes during transcoding)
-*   **Immich Server:** 1.5GB RAM / 1.5 CPUs
-*   **Immich ML:** 1GB RAM / 1 CPU (reduced to prevent OOM kills)
 *   **qBittorrent:** 800MB RAM / 1.5 CPUs
 *   **Bazarr:** 500MB RAM / 1 CPU
 *   **Sonarr/Radarr:** 400MB RAM / 1 CPU each
@@ -114,11 +110,6 @@ Containers are configured with **optimized CPU and RAM limits** to prevent syste
     *   Disable "Use hardware acceleration" if crashes persist
     *   Set "Transcoder temporary directory" to `/tmp` (uses RAM, faster)
     *   Limit "Maximum simultaneous video transcode" to 1-2
-
-4.  **Immich Processing:**
-    If Immich ML causes crashes:
-    *   Disable machine learning in Immich settings
-    *   Or stop `immich-machine-learning` container: `docker stop immich_machine_learning`
 
 ## 🔒 Remote Access
 
