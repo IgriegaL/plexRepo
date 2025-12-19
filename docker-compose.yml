@@ -20,7 +20,7 @@ services:
     cpus: 2
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:32400/web/index.html"]
-      interval: 30s
+      interval: 15m
       timeout: 10s
       retries: 3
       start_period: 40s
@@ -52,9 +52,10 @@ services:
       - radarr
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6767"]
-      interval: 30s
+      interval: 15m
       timeout: 10s
       retries: 3
+      start_period: 30s
     logging:
       driver: "json-file"
       options:
@@ -84,9 +85,10 @@ services:
     cpus: 1
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8089"]
-      interval: 30s
+      interval: 15m
       timeout: 10s
       retries: 3
+      start_period: 30s
     logging:
       driver: "json-file"
       options:
@@ -116,9 +118,10 @@ services:
       - qbittorrent
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8989"]
-      interval: 30s
+      interval: 15m
       timeout: 10s
       retries: 3
+      start_period: 30s
     logging:
       driver: "json-file"
       options:
@@ -148,9 +151,10 @@ services:
       - qbittorrent
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7878"]
-      interval: 30s
+      interval: 15m
       timeout: 10s
       retries: 3
+      start_period: 30s
     logging:
       driver: "json-file"
       options:
@@ -171,16 +175,17 @@ services:
     ports:
       - 5055:5055
     restart: unless-stopped
-    mem_limit: 500m
-    cpus: 1
+    mem_limit: 300m
+    cpus: 0.5
     depends_on:
       - sonarr
       - radarr
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5055"]
-      interval: 30s
+      interval: 15m
       timeout: 10s
       retries: 3
+      start_period: 30s
     logging:
       driver: "json-file"
       options:
@@ -201,15 +206,16 @@ services:
     ports:
       - 8181:8181
     restart: unless-stopped
-    mem_limit: 500m
-    cpus: 1
+    mem_limit: 200m
+    cpus: 0.5
     depends_on:
       - plex
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8181"]
-      interval: 30s
+      interval: 15m
       timeout: 10s
       retries: 3
+      start_period: 30s
     logging:
       driver: "json-file"
       options:
@@ -230,13 +236,14 @@ services:
     ports:
       - 9696:9696
     restart: unless-stopped
-    mem_limit: 500m
-    cpus: 1
+    mem_limit: 300m
+    cpus: 0.5
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9696"]
-      interval: 30s
+      interval: 15m
       timeout: 10s
       retries: 3
+      start_period: 30s
     logging:
       driver: "json-file"
       options:
@@ -284,8 +291,8 @@ services:
     image: caddy:latest
     container_name: caddy
     restart: unless-stopped
-    mem_limit: 200m
-    cpus: 1
+    mem_limit: 128m
+    cpus: 0.5
     ports:
       - "8080:8080"
       - "8443:443"
@@ -293,6 +300,17 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080"]
+      interval: 15m
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
     networks:
       - media
 
@@ -303,8 +321,19 @@ services:
       - LOG_LEVEL=info
       - TZ=${TZ}
     restart: unless-stopped
-    mem_limit: 500m
-    cpus: 1
+    mem_limit: 300m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8191/health"]
+      interval: 15m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
     networks:
       - media
 
