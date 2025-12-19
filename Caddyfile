@@ -41,10 +41,6 @@ http://tautulli.plex-server:8080 {
     reverse_proxy tautulli:8181
 }
 
-http://immich.plex-server:8080 {
-    reverse_proxy immich-server:2283
-}
-
 http://portainer.plex-server:8080 {
     reverse_proxy portainer:9000
 }
