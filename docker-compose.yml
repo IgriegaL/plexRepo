@@ -321,8 +321,8 @@ services:
       - LOG_LEVEL=info
       - TZ=${TZ}
     restart: unless-stopped
-    mem_limit: 300m
-    cpus: 0.5
+    mem_limit: 800m
+    cpus: 1.0
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8191/health"]
       interval: 15m
