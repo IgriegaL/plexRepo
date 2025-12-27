@@ -63,6 +63,8 @@ services:
         max-file: "3"
     networks:
       - media
+    extra_hosts:
+      - "plex:host-gateway"
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -129,6 +131,8 @@ services:
         max-file: "3"
     networks:
       - media
+    extra_hosts:
+      - "plex:host-gateway"
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -160,6 +164,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    extra_hosts:
+      - "plex:host-gateway"
     networks:
       - media
 
@@ -189,6 +195,8 @@ services:
     logging:
       driver: "json-file"
       options:
+    extra_hosts:
+      - "plex:host-gateway"
         max-size: "10m"
         max-file: "3"
     networks:
@@ -217,6 +225,8 @@ services:
       retries: 3
       start_period: 30s
     logging:
+    extra_hosts:
+      - "plex:host-gateway"
       driver: "json-file"
       options:
         max-size: "10m"
@@ -305,6 +315,8 @@ services:
       interval: 15m
       timeout: 10s
       retries: 3
+    extra_hosts:
+      - "plex:host-gateway"
       start_period: 10s
     logging:
       driver: "json-file"
