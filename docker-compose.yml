@@ -202,6 +202,25 @@ services:
     extra_hosts:
       - "plex:host-gateway"
 
+  requestrr:
+    image: darkalfx/requestrr:latest
+    container_name: requestrr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./config/requestrr:/root/config
+    ports:
+      - 4545:4545
+    restart: unless-stopped
+    mem_limit: 300m
+    cpus: 0.5
+    depends_on:
+      - overseerr
+    networks:
+      - media
+
   tautulli:
     image: lscr.io/linuxserver/tautulli:latest
     container_name: tautulli
