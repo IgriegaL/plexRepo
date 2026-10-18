@@ -28,6 +28,8 @@ if [ -f .env ]; then
         "$PROWLARR_CONFIG_VOLUME"
         "$OVERSEERR_CONFIG_VOLUME"
         "$QBITTORRENT_CONFIG_VOLUME"
+        "$TAUTULLI_CONFIG_VOLUME"
+        "$REQUESTRR_CONFIG_VOLUME"
         "$PORTAINER_CONFIG_VOLUME"
     )
 

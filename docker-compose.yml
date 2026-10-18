@@ -82,6 +82,9 @@ services:
       - 8089:8089
       - 6881:6881
       - 6881:6881/udp
+    depends_on:
+      init:
+        condition: service_completed_successfully
     restart: unless-stopped
     mem_limit: 600m
     cpus: 1
@@ -210,7 +213,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - ./config/requestrr:/root/config
+      - ${REQUESTRR_CONFIG_VOLUME:-./config/requestrr}:/root/config
     ports:
       - 4545:4545
     restart: unless-stopped
@@ -294,6 +297,8 @@ services:
     restart: unless-stopped
     mem_limit: 200m
     cpus: 0.5
+    networks:
+      - media
     logging:
       driver: "json-file"
       options:
@@ -310,6 +315,8 @@ services:
     restart: unless-stopped
     mem_limit: 100m
     cpus: 0.5
+    networks:
+      - media
     logging:
       driver: "json-file"
       options:
@@ -371,6 +378,59 @@ services:
         max-file: "2"
     networks:
       - media
+
+  # ------------------- Auto-configuración -------------------
+  # Corre una vez antes de qBittorrent: fija usuario/contraseña y rutas.
+  init:
+    image: python:3.13-alpine
+    container_name: init
+    command: ["python", "/bootstrap/bootstrap.py", "init"]
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - QBITTORRENT_WEBUI_PORT=8089
+      - TORRENTING_PORT=6881
+    volumes:
+      - ./bootstrap:/bootstrap:ro
+      - ${QBITTORRENT_CONFIG_VOLUME}:/cfg/qbittorrent
+    restart: "no"
+    network_mode: none
+
+  # Corre en cada `docker compose up -d` y conecta los servicios entre sí (idempotente).
+  # Ver logs: docker logs -f bootstrap   |   Re-ejecutar: docker compose run --rm bootstrap
+  bootstrap:
+    image: python:3.13-alpine
+    container_name: bootstrap
+    command: ["python", "/bootstrap/bootstrap.py", "configure"]
+    environment:
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - QBITTORRENT_WEBUI_PORT=8089
+      - QUALITY_PROFILE=${QUALITY_PROFILE:-HD-1080p}
+      - PLEX_LANGUAGE=${PLEX_LANGUAGE:-es-ES}
+    volumes:
+      - ./bootstrap:/bootstrap:ro
+      - ${SONARR_CONFIG_VOLUME}:/cfg/sonarr:ro
+      - ${RADARR_CONFIG_VOLUME}:/cfg/radarr:ro
+      - ${PROWLARR_CONFIG_VOLUME}:/cfg/prowlarr:ro
+      - ${BAZARR_CONFIG_VOLUME}:/cfg/bazarr:ro
+      - ${OVERSEERR_CONFIG_VOLUME}:/cfg/overseerr:ro
+      - ${PLEX_CONFIG_VOLUME}:/cfg/plex:ro
+    depends_on:
+      - sonarr
+      - radarr
+      - prowlarr
+      - qbittorrent
+      - bazarr
+      - overseerr
+      - flaresolverr
+    restart: "no"
+    networks:
+      - media
+    extra_hosts:
+      - "plex:host-gateway"
 
   # ------------------- Monitoreo -------------------
   netdata:

@@ -1,0 +1,5 @@
+# Override para equipos sin GPU accesible desde Docker (macOS, VMs, Linux sin /dev/dri).
+# setup.sh lo activa solo (COMPOSE_FILE en .env); Plex usará transcodificación por CPU.
+services:
+  plex:
+    devices: !reset []

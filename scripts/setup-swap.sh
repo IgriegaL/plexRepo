@@ -6,6 +6,12 @@
 
 set -e
 
+if [ "$(uname -s)" = Darwin ]; then
+    echo "En macOS la memoria de los contenedores la define la VM de Colima."
+    echo "Para darle más RAM:  colima stop && colima start --memory 10"
+    exit 0
+fi
+
 SWAP_SIZE=${1:-4G}
 SWAP_FILE="/swapfile"
 

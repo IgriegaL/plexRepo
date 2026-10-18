@@ -52,3 +52,7 @@ http://dozzle.plex-server:8080 {
 http://flaresolverr.plex-server:8080 {
     reverse_proxy flaresolverr:8191
 }
+
+http://netdata.plex-server:8080 {
+    reverse_proxy netdata:19999
+}

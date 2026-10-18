@@ -5,7 +5,17 @@
 
 set -e
 
-echo "🔍 Monitoreo de Recursos - Orange Pi 5 Pro"
+# En macOS los contenedores corren dentro de la VM de Colima: medimos ahí
+if [ "$(uname -s)" = Darwin ]; then
+    if command -v colima >/dev/null && colima status >/dev/null 2>&1; then
+        exec colima ssh -- bash -s < "$0"
+    fi
+    echo "En macOS este script mide la VM de Colima, que no está corriendo."
+    echo "Alternativa: Netdata en http://localhost:19999"
+    exit 1
+fi
+
+echo "🔍 Monitoreo de Recursos"
 echo "=========================================="
 echo ""
 
@@ -43,7 +53,8 @@ echo ""
 
 # Contenedores con problemas
 echo "⚠️  Contenedores con Problemas:"
-PROBLEM_CONTAINERS=$(docker ps -a --filter "status=exited" --filter "status=dead" --filter "status=restarting" --format "{{.Names}} ({{.Status}})" 2>/dev/null || echo "")
+PROBLEM_CONTAINERS=$(docker ps -a --filter "status=exited" --filter "status=dead" --filter "status=restarting" --format "{{.Names}} ({{.Status}})" 2>/dev/null \
+    | grep -vE '^init \(Exited \(0\)|^bootstrap \(Exited \(0\)' || true)
 if [ -z "$PROBLEM_CONTAINERS" ]; then
     echo "   ✅ Todos los contenedores funcionan correctamente"
 else

@@ -1,121 +1,354 @@
 # 🍊 Plex Media Server
 
-Complete media server stack optimized for **Orange Pi 5 Pro (RK3588)** using Docker Compose.
+Stack completo de media server con Docker Compose, pensado para **Orange Pi 5 Pro (RK3588)** y probado también en **Linux** (Ubuntu) y **macOS** (Apple Silicon).
 
-## 🚀 Features
+Un solo comando instala Docker si hace falta, levanta todos los servicios y **los conecta entre sí automáticamente**: no hay que copiar API keys ni configurar clientes de descarga a mano.
 
-*   **Media Center:** Plex (Hardware Transcoding), Sonarr, Radarr, Bazarr, Prowlarr, Overseerr, qBittorrent, Tautulli.
-*   **Utilities:** Unpackerr (Auto-extract), Flaresolverr (Cloudflare solver).
-*   **Access & Security:** Caddy (Reverse Proxy), Tailscale (Secure Remote Access).
-*   **Management:** Portainer (Docker UI), Dozzle (Real-time logs).
-*   **Automation:** `bootstrap` script for auto-configuring connections between services.
+```bash
+git clone https://github.com/IgriegaL/plexRepo.git
+cd plexRepo
+./scripts/setup.sh
+```
 
-## 📋 Requirements
+---
 
-*   **Hardware:** Orange Pi 5 Pro (or similar with RK3588).
-*   **Storage:**
-    *   NVMe SSD (Recommended for configs/databases).
-    *   HDD (For media storage).
-*   **Software:** Docker and Docker Compose installed.
+## 📑 Índice
 
-## 🛠️ Quick Installation
+1. [Qué incluye](#-qué-incluye)
+2. [Requisitos](#-requisitos)
+3. [Instalación](#-instalación)
+4. [Qué hace la automatización](#-qué-hace-la-automatización)
+5. [Qué debes hacer tú](#-qué-debes-hacer-tú)
+6. [Endpoints expuestos](#-endpoints-expuestos)
+7. [Uso diario](#-uso-diario)
+8. [Configuración (.env)](#-configuración-env)
+9. [Linux vs macOS](#-linux-vs-macos)
+10. [Solución de problemas](#-solución-de-problemas)
+11. [Recursos y estabilidad](#-recursos-y-estabilidad)
+12. [Seguridad](#-seguridad)
+13. [Estructura del repositorio](#-estructura-del-repositorio)
 
-1.  **Clone repository:**
-    ```bash
-    git clone <your-repo>
-    cd plexRepo
-    ```
+---
 
-2.  **Configure environment:**
-    ```bash
-    cp .env.example .env
-    nano .env
-    ```
-    *Fill in your disk paths, API Keys, and Tailscale Auth Key.*
+## 🚀 Qué incluye
 
-3.  **Create directories:**
-    ```bash
-    # Adjust paths according to your .env
-    sudo mkdir -p /mnt/nvme/docker-volumes/{plex,sonarr,radarr,bazarr,prowlarr,overseerr,qbittorrent,portainer,gluetun,tautulli,tailscale,npm-data,npm-letsencrypt}
-    sudo mkdir -p /mnt/DiscoDuro/{tvserie,movies,downloads}
-    sudo chown -R 1000:1000 /mnt/nvme/docker-volumes /mnt/DiscoDuro
-    ```
+| Categoría | Servicios |
+| :--- | :--- |
+| **Media** | Plex (transcodificación por hardware si hay GPU), Tautulli |
+| **Automatización de descargas** | Sonarr (series), Radarr (películas), Prowlarr (indexers), Bazarr (subtítulos), qBittorrent, FlareSolverr |
+| **Peticiones** | Overseerr (web), Requestrr (Discord) |
+| **Acceso** | Caddy (reverse proxy con nombres amigables) |
+| **Administración** | Portainer (UI de Docker), Dozzle (logs en vivo), Netdata (monitoreo) |
+| **Auto-configuración** | `init` y `bootstrap`: contenedores que corren una vez y dejan todo conectado |
 
-4.  **Start:**
-    ```bash
-    docker compose up -d
-    ```
+### Cómo fluye el contenido
 
-## 🌐 Access (via Tailscale & Caddy)
+```
+ Overseerr ──pide──▶ Sonarr / Radarr ──busca en──▶ Prowlarr ──▶ indexers (vía FlareSolverr si hay Cloudflare)
+                          │
+                          ├──envía torrent──▶ qBittorrent ──descarga──▶ /downloads
+                          │
+                          ├──importa/renombra──▶ /tv  ·  /movies
+                          │
+                          └──avisa──▶ Plex (refresca la biblioteca) ──▶ Tautulli (estadísticas)
 
-Once connected to your Tailscale network, you can access services using friendly names.
-*Default hostname:* `plex-server` (You can change this in `docker-compose.yml` and `Caddyfile`).
+ Bazarr ──lee series/películas de Sonarr/Radarr──▶ descarga subtítulos
+```
 
-| Service | URL | Description |
+---
+
+## 📋 Requisitos
+
+| | Linux | macOS |
 | :--- | :--- | :--- |
-| **Overseerr** | `http://plex-server:8080` | Request Content (Home) |
-| **Plex** | `http://plex.plex-server:8080` | Media Server |
-| **Sonarr** | `http://sonarr.plex-server:8080` | TV Series |
-| **Radarr** | `http://radarr.plex-server:8080` | Movies |
-| **Tautulli** | `http://tautulli.plex-server:8080` | Plex Statistics |
-| **Portainer** | `http://portainer.plex-server:8080` | Docker Management |
+| **Sistema** | Cualquier distro con systemd (Ubuntu, Debian, Armbian…) | macOS 13+ (Apple Silicon o Intel) |
+| **Docker** | Lo instala `setup.sh` (script oficial `get.docker.com`) | Lo instala `setup.sh`: [Colima](https://github.com/abiosoft/colima) + Docker CLI + Compose vía Homebrew (gratis y open source) |
+| **Otros** | `curl`, `sudo` | [Homebrew](https://brew.sh) |
+| **RAM** | 4 GB mínimo, 8 GB recomendado | 16 GB recomendado (Colima usa 8 GB) |
+| **Disco** | NVMe/SSD para configs + HDD para medios (recomendado) | ~15 GB libres para imágenes |
 
-*Note: You can still access via IP:Port if needed.*
+Además necesitas una **cuenta de Plex** (gratis) para vincular el servidor.
 
-## 🤖 Auto-Configuration (Bootstrap)
+---
 
-The `bootstrap` service runs at startup and automatically attempts to connect your applications.
+## 🛠️ Instalación
 
-1.  The first time you start, access Sonarr, Radarr, and Prowlarr to obtain their **API Keys**.
-2.  Add them to your `.env` file.
-3.  Restart the stack: `docker compose up -d`.
-4.  The script will automatically configure:
-    *   Sonarr/Radarr → qBittorrent (with "Remove Completed" enabled)
-    *   Prowlarr → Sonarr/Radarr
+### 1. Clona y ejecuta
 
-## ⚙️ Resource Management
+```bash
+git clone https://github.com/IgriegaL/plexRepo.git
+cd plexRepo
+./scripts/setup.sh
+```
 
-Containers are configured with **optimized CPU and RAM limits** to prevent system crashes on the Orange Pi 5 Pro (8GB RAM, 8 cores):
+### 2. Pega el código de Plex cuando lo pida
 
-### Current Resource Allocation:
-*   **Plex:** 3GB RAM / 3 CPUs (reduced to prevent crashes during transcoding)
-*   **qBittorrent:** 800MB RAM / 1.5 CPUs
-*   **Bazarr:** 500MB RAM / 1 CPU
-*   **Sonarr/Radarr:** 400MB RAM / 1 CPU each
-*   **Overseerr/Prowlarr/Tautulli:** 500MB RAM / 1 CPU each
-*   **Others:** Optimized for minimal footprint
+Si Plex aún no está vinculado a tu cuenta, el script se detiene y pide un código:
 
-**Total:** ~9.3GB RAM / 15 CPUs (within safe limits for your hardware)
+```
+Plex aún no está vinculado a tu cuenta.
+Abre https://www.plex.tv/claim/ y pega el código (Enter para omitir):
+```
 
-### ⚠️ Important Stability Notes:
+Abre [plex.tv/claim](https://www.plex.tv/claim/), inicia sesión y copia el código `claim-xxxx`. **Expira en 4 minutos**, así que pégalo de inmediato. También puedes pasarlo directamente:
 
-1.  **Swap Configuration (Recommended):**
-    If your system crashes with "Out of Memory" errors, enable swap:
-    ```bash
-    sudo fallocate -l 4G /swapfile
-    sudo chmod 600 /swapfile
-    sudo mkswap /swapfile
-    sudo swapon /swapfile
-    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-    ```
+```bash
+./scripts/setup.sh --claim claim-xxxxxxxxxxxxxxxx
+```
 
-2.  **Monitor Resources:**
-    Check system health with:
-    ```bash
-    ./scripts/monitor.sh
-    ```
+### 3. Espera el resumen
 
-3.  **Reduce Transcoding Load:**
-    In Plex settings:
-    *   Disable "Use hardware acceleration" if crashes persist
-    *   Set "Transcoder temporary directory" to `/tmp` (uses RAM, faster)
-    *   Limit "Maximum simultaneous video transcode" to 1-2
+La primera vez tarda unos minutos (descarga ~5 GB de imágenes). Al final verás algo así:
 
-## 🔒 Remote Access
+```
+[BOOTSTRAP] Sonarr: login configurado (usuario 'admin')
+[BOOTSTRAP] Sonarr: carpeta raíz /tv agregada
+[BOOTSTRAP] Sonarr: qBittorrent agregado (downloadclient)
+...
+[BOOTSTRAP] Overseerr: asistente inicial completado
+[BOOTSTRAP] ✅ Todo configurado
 
-*   **Tailscale:** Included for secure remote access without opening ports.
-*   **Direct Play:** Configure Plex clients to "Maximum Quality" to avoid transcoding over the VPN.
+================================================================
+ Usuario: admin   Contraseña: (ADMIN_PASSWORD en .env)
 
-## 🔄 Maintenance
+ Overseerr    http://192.168.1.50:5055   (entra con tu cuenta de Plex)
+ ...
+```
 
-*   **Backups:** Run `./scripts/backup.sh` to backup your configurations.
+La contraseña está en el archivo `.env`:
+
+```bash
+grep ADMIN_PASSWORD .env
+```
+
+### Qué hace `setup.sh` paso a paso
+
+| Paso | Linux | macOS |
+| :--- | :--- | :--- |
+| 0. Docker | Lo instala si falta y lo habilita al arranque (`systemctl enable docker`) | Instala Colima si falta y la inicia con la mitad de CPU/RAM (máx. 8 GB) |
+| 1. `.env` | Lo crea desde `.env.example`: `PUID`/`PGID` de tu usuario y `ADMIN_PASSWORD` aleatoria | Igual |
+| 2. Rutas | Usa `/mnt/nvme` y `/mnt/DiscoDuro` si existen; si no, `~/plex-stack/` | Siempre `~/plex-stack/` |
+| 3. GPU | Si existe `/dev/dri`, activa la transcodificación por hardware de Plex | Sin GPU: agrega `docker-compose.no-gpu.yml` |
+| 4. Carpetas | Crea las carpetas de config y medios con el dueño correcto | Igual |
+| 5. Plex | Pide el claim solo si Plex no está vinculado | Igual |
+| 6. Arranque | `docker compose pull` + `up -d` y muestra el log de `bootstrap` | Igual |
+
+Ejecutar `setup.sh` otra vez es seguro: no sobrescribe tu `.env` ni duplica configuraciones.
+
+---
+
+## 🤖 Qué hace la automatización
+
+Hay dos contenedores que corren una vez y terminan. Los dos son **idempotentes**: se ejecutan en cada `docker compose up -d` y solo agregan lo que falta.
+
+### `init` (antes de qBittorrent)
+
+Prepara `qBittorrent.conf` para evitar la contraseña temporal que qBittorrent muestra en los logs:
+
+- Usuario y contraseña de la WebUI = `ADMIN_USER` / `ADMIN_PASSWORD` (hash PBKDF2)
+- Descargas en `/downloads/`, incompletas en `/downloads/incomplete/`
+- Acepta el aviso legal y desactiva la validación de host (para entrar vía Caddy)
+
+Si qBittorrent ya tiene contraseña, **no la cambia**.
+
+### `bootstrap` (después de levantar todo)
+
+Lee la API key de cada app desde sus propios archivos de configuración (`config.xml`, `config.yaml`, `settings.json`, `Preferences.xml`). Por eso **nunca tienes que copiar API keys**. Luego configura:
+
+| Servicio | Qué configura |
+| :--- | :--- |
+| **Sonarr** | Login (formulario, usuario `admin`) · carpeta raíz `/tv` · qBittorrent (categoría `tv-sonarr`) · notificación a Plex para refrescar la biblioteca al importar |
+| **Radarr** | Login · carpeta raíz `/movies` · qBittorrent (categoría `radarr`) · notificación a Plex |
+| **Prowlarr** | Login · FlareSolverr como proxy (etiqueta `flaresolverr`) · sincronización completa con Sonarr y Radarr |
+| **Bazarr** | Conexión con Sonarr y Radarr |
+| **Plex** | Bibliotecas **Películas** (`/movies`) y **Series** (`/tv`) |
+| **Overseerr** | Inicia sesión con la cuenta dueña de Plex (queda como admin) · conecta Plex y habilita bibliotecas · agrega Sonarr y Radarr con el perfil `QUALITY_PROFILE` · completa el asistente inicial |
+
+Si algún paso falla, el resto sigue y al final muestra un resumen de advertencias. En ese caso el contenedor termina con código 1.
+
+---
+
+## ✋ Qué debes hacer tú
+
+La automatización no puede hacer lo que depende de tus cuentas o tus preferencias:
+
+| # | Tarea | Dónde | Obligatorio |
+| :-: | :--- | :--- | :-: |
+| 1 | Pegar el **código de claim de Plex** (solo la primera vez) | `setup.sh` | ✅ |
+| 2 | **Agregar indexers** (torrent trackers). Para sitios con Cloudflare, ponles la etiqueta `flaresolverr` | Prowlarr → Indexers → Add | ✅ |
+| 3 | Elegir **idiomas y proveedores de subtítulos** | Bazarr → Settings → Languages / Providers | Opcional |
+| 4 | Completar el **asistente de Tautulli** (iniciar sesión con Plex) | `http://IP:8181` | Opcional |
+| 5 | Configurar el **bot de Discord** | Requestrr `http://IP:4545` | Opcional |
+| 6 | Ajustar el **perfil de calidad** si no quieres 1080p | `.env` → `QUALITY_PROFILE`, o en Overseerr | Opcional |
+| 7 | Usar **nombres amigables** (`sonarr.plex-server`): apunta `*.plex-server` a la IP del servidor en tu DNS o en `/etc/hosts` | Tu router / equipo | Opcional |
+
+Después de eso, el uso normal es: **pide una película o serie en Overseerr** y el resto pasa solo. Se busca, se descarga, se renombra, aparece en Plex y se bajan los subtítulos.
+
+---
+
+## 🌐 Endpoints expuestos
+
+Todos los puertos se publican en todas las interfaces del servidor (`0.0.0.0`). Reemplaza `IP` por la IP del servidor (o `localhost` si estás en la misma máquina).
+
+### Interfaces web
+
+| Servicio | URL directa | Vía Caddy (`:8080`) | Login |
+| :--- | :--- | :--- | :--- |
+| **Overseerr** | `http://IP:5055` | `http://IP:8080` · `http://overseerr.plex-server:8080` | Cuenta de Plex |
+| **Plex** | `http://IP:32400/web` | `http://plex.plex-server:8080` | Cuenta de Plex |
+| **Sonarr** | `http://IP:8989` | `http://sonarr.plex-server:8080` | `admin` / `ADMIN_PASSWORD` |
+| **Radarr** | `http://IP:7878` | `http://radarr.plex-server:8080` | `admin` / `ADMIN_PASSWORD` |
+| **Prowlarr** | `http://IP:9696` | `http://prowlarr.plex-server:8080` | `admin` / `ADMIN_PASSWORD` |
+| **qBittorrent** | `http://IP:8089` | `http://qbittorrent.plex-server:8080` | `admin` / `ADMIN_PASSWORD` |
+| **Bazarr** | `http://IP:6767` | `http://bazarr.plex-server:8080` | Sin login (configurable) |
+| **Tautulli** | `http://IP:8181` | `http://tautulli.plex-server:8080` | Asistente inicial |
+| **Requestrr** | `http://IP:4545` | — | Se crea en el primer acceso |
+| **Portainer** | `http://IP:9000` | `http://portainer.plex-server:8080` | Se crea en el primer acceso (**hazlo pronto**, ver [Seguridad](#-seguridad)) |
+| **Dozzle** | `http://IP:8888` | `http://dozzle.plex-server:8080` | Sin login |
+| **Netdata** | `http://IP:19999` | `http://netdata.plex-server:8080` | Sin login |
+| **FlareSolverr** | `http://IP:8191` | `http://flaresolverr.plex-server:8080` | API sin UI |
+
+### Otros puertos
+
+| Puerto | Protocolo | Uso |
+| :--- | :--- | :--- |
+| `32400` | TCP | Plex (corre en `network_mode: host`, así que usa también los puertos de descubrimiento de Plex en la LAN) |
+| `6881` | TCP/UDP | Puerto de torrents de qBittorrent (ábrelo en el router para mejor velocidad) |
+| `8443` | TCP | Caddy HTTPS (sin uso por defecto) |
+
+### APIs (para scripts o integraciones)
+
+Todas usan la API key que cada app guarda en su configuración. Es la misma que lee `bootstrap`.
+
+| Servicio | Base | Autenticación |
+| :--- | :--- | :--- |
+| Sonarr | `http://IP:8989/api/v3` | Header `X-Api-Key` (en `SONARR_CONFIG_VOLUME/config.xml`) |
+| Radarr | `http://IP:7878/api/v3` | Header `X-Api-Key` (en `RADARR_CONFIG_VOLUME/config.xml`) |
+| Prowlarr | `http://IP:9696/api/v1` | Header `X-Api-Key` (en `PROWLARR_CONFIG_VOLUME/config.xml`) |
+| Overseerr | `http://IP:5055/api/v1` | Header `X-Api-Key` (en `OVERSEERR_CONFIG_VOLUME/settings.json`) |
+| Bazarr | `http://IP:6767/api` | Header `X-API-KEY` (en `BAZARR_CONFIG_VOLUME/config/config.yaml`) |
+| qBittorrent | `http://IP:8089/api/v2` | Cookie de `POST /api/v2/auth/login` |
+| Plex | `http://IP:32400` | Header `X-Plex-Token` (`PlexOnlineToken` en `Preferences.xml`) |
+
+Ejemplo:
+
+```bash
+KEY=$(sed -n 's:.*<ApiKey>\(.*\)</ApiKey>.*:\1:p' ~/plex-stack/config/sonarr/config.xml)
+curl -H "X-Api-Key: $KEY" http://localhost:8989/api/v3/series
+```
+
+---
+
+## 🔁 Uso diario
+
+```bash
+./scripts/setup.sh                    # instalar / reparar / aplicar cambios del .env
+docker compose ps                     # estado de los servicios
+docker logs -f bootstrap              # qué hizo la auto-configuración
+docker compose run --rm bootstrap     # volver a ejecutar la auto-configuración
+docker compose logs -f sonarr         # logs de un servicio (o usa Dozzle)
+docker compose restart radarr         # reiniciar un servicio
+docker compose pull && docker compose up -d   # actualizar todas las imágenes
+docker compose down                   # detener todo (los datos se conservan)
+./scripts/monitor.sh                  # RAM, swap, temperatura y top de contenedores
+./scripts/backup.sh                   # respaldo de configs en ~/plex-backups
+```
+
+> `docker compose` lee `COMPOSE_FILE` desde `.env`, así que estos comandos aplican solos el override sin GPU cuando corresponde. En Linux, si tu usuario no está en el grupo `docker`, anteponles `sudo`.
+
+**Arranque automático:** todos los servicios tienen `restart: unless-stopped`.
+- **Linux:** Docker queda habilitado al iniciar el sistema, así que el stack vuelve solo tras un reinicio.
+- **macOS:** Colima no arranca sola al iniciar sesión. Para activarlo: `colima stop && brew services start colima`.
+
+---
+
+## ⚙️ Configuración (`.env`)
+
+`setup.sh` crea el `.env` a partir de [`.env.example`](.env.example). Después de editarlo, ejecuta `./scripts/setup.sh` otra vez.
+
+| Variable | Por defecto | Descripción |
+| :--- | :--- | :--- |
+| `PUID` / `PGID` | Tu usuario | Dueño de los archivos que crean los contenedores |
+| `TZ` | `America/Santiago` | Zona horaria |
+| `ADMIN_USER` | `admin` | Usuario de qBittorrent, Sonarr, Radarr y Prowlarr |
+| `ADMIN_PASSWORD` | Aleatoria | Contraseña de esos servicios |
+| `PLEX_CLAIM` | — | Código de [plex.tv/claim](https://www.plex.tv/claim/), solo para el primer arranque |
+| `QUALITY_PROFILE` | `HD-1080p` | Perfil que Overseerr usa por defecto en Sonarr/Radarr |
+| `PLEX_LANGUAGE` | `es-ES` | Idioma de metadatos de las bibliotecas creadas |
+| `*_CONFIG_VOLUME` | `/mnt/nvme/docker-volumes/<app>` o `~/plex-stack/config/<app>` | Configuración de cada app (mejor en SSD) |
+| `TV_SERIES_VOLUME` · `MOVIES_VOLUME` · `DOWNLOADS_VOLUME` | `/mnt/DiscoDuro/...` o `~/plex-stack/media/...` | Medios y descargas |
+| `COMPOSE_FILE` | Lo define `setup.sh` | Agrega `docker-compose.no-gpu.yml` si no hay `/dev/dri` |
+| `NETDATA_CLAIM_TOKEN` | — | Opcional, para vincular Netdata Cloud |
+
+---
+
+## 🐧🍎 Linux vs macOS
+
+| | Linux | macOS |
+| :--- | :--- | :--- |
+| Motor de Docker | Docker Engine nativo | VM Linux de Colima (Docker Desktop/OrbStack también se aceptan si ya están corriendo, pero no se han probado) |
+| Transcodificación por hardware | Sí, si existe `/dev/dri` (Orange Pi, Intel iGPU…) | No, se usa la CPU |
+| `network_mode: host` de Plex | Red del host | Red de la VM; Colima reenvía el puerto 32400 a la Mac |
+| Netdata / `monitor.sh` | Miden el host | Miden la VM de Colima |
+| `setup-swap.sh` | Crea `/swapfile` | No aplica (la RAM la define Colima: `colima start --memory N`) |
+
+Probado de punta a punta en **macOS 27 (Apple Silicon) + Colima 0.10** y en **Ubuntu 26.04 ARM64** sin Docker preinstalado.
+
+---
+
+## 🩺 Solución de problemas
+
+| Síntoma | Causa / solución |
+| :--- | :--- |
+| `Plex no está reclamado` al final del bootstrap | No se pegó el claim o expiró. Obtén otro en [plex.tv/claim](https://www.plex.tv/claim/) y ejecuta `./scripts/setup.sh --claim claim-xxxx`, luego `docker compose run --rm bootstrap` |
+| Sonarr/Radarr no pueden conectar con qBittorrent | Instalación previa con otra contraseña en qBittorrent. Pon esa misma contraseña en `ADMIN_PASSWORD` y vuelve a ejecutar `docker compose run --rm bootstrap` |
+| `bootstrap` sale con código 1 | Revisa `docker logs bootstrap`: al final lista cada advertencia. Corrige y vuelve a ejecutarlo |
+| No veo resultados al buscar | Falta agregar indexers en Prowlarr (paso 2 de [Qué debes hacer tú](#-qué-debes-hacer-tú)) |
+| Un indexer falla por Cloudflare | Agrégale la etiqueta `flaresolverr` en Prowlarr |
+| `*.plex-server:8080` no abre | Falta apuntar el nombre a la IP del servidor (DNS o `/etc/hosts`) |
+| macOS: `Cannot connect to the Docker daemon` | Colima está detenida: `colima start` (o ejecuta `./scripts/setup.sh`) |
+| Linux: `permission denied ... docker.sock` | Usa `sudo docker compose ...` o agrega tu usuario al grupo: `sudo usermod -aG docker $USER` y vuelve a iniciar sesión |
+| El sistema se cuelga por falta de memoria | `sudo ./scripts/setup-swap.sh` (Linux) y revisa `./scripts/monitor.sh` |
+
+---
+
+## ⚙️ Recursos y estabilidad
+
+Cada servicio tiene límites de `mem_limit` / `cpus` en `docker-compose.yml`, pensados para una Orange Pi 5 Pro de 8 GB. Plex tiene la mayor parte (2 GB / 2 CPU).
+
+1. **Swap (recomendado en la Pi):** `sudo ./scripts/setup-swap.sh`
+2. **Monitoreo:** `./scripts/monitor.sh` o Netdata en `:19999` (ver [MONITORING.md](MONITORING.md))
+3. **Menos carga de transcodificación** en Plex:
+   - Configura los clientes en "Calidad máxima" para que reproduzcan directo (Direct Play)
+   - Limita "Maximum simultaneous video transcode" a 1–2
+   - Si hay crashes, desactiva "Use hardware acceleration"
+
+---
+
+## 🔒 Seguridad
+
+- **No abras estos puertos a Internet.** Para acceso remoto usa una VPN en el host, como Tailscale o WireGuard (no incluida en el stack).
+- **Portainer, Dozzle y Netdata tienen acceso a `docker.sock`**, que equivale a acceso root al host. Crea el usuario de Portainer apenas levantes el stack y no expongas Dozzle ni Netdata fuera de tu red.
+- Sonarr, Radarr, Prowlarr y qBittorrent piden login siempre. Las credenciales están en `.env`, que no se sube a git (está en `.gitignore`).
+- Para cambiar la contraseña después de instalar, hazlo en la UI de cada servicio. `bootstrap` no sobrescribe un login que ya existe.
+
+---
+
+## 📁 Estructura del repositorio
+
+```
+.
+├── docker-compose.yml          # Definición de todos los servicios
+├── docker-compose.no-gpu.yml   # Override sin /dev/dri (macOS, VMs, Linux sin GPU)
+├── .env.example                # Plantilla de configuración
+├── Caddyfile                   # Reverse proxy *.plex-server:8080
+├── netdata.conf                # Retención y alertas de Netdata
+├── bootstrap/
+│   └── bootstrap.py            # Auto-configuración (init + configure), solo librería estándar de Python
+├── scripts/
+│   ├── setup.sh                # Instalación/arranque en un paso (Linux y macOS)
+│   ├── monitor.sh              # Estado de recursos y contenedores
+│   ├── backup.sh               # Respaldo de configuraciones
+│   └── setup-swap.sh           # Swap en Linux
+└── .github/workflows/          # Validación de compose, scripts y seguridad
+```

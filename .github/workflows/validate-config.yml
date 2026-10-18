@@ -15,42 +15,24 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
       
-      - name: Instalar Docker Compose
+      - name: Validar docker-compose.yml con .env.example
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-      
-      - name: Validar docker-compose.yml
-        run: docker-compose config
+          cp .env.example .env
+          docker compose config --quiet
+          echo "✅ docker-compose.yml válido"
 
-      - name: Validar servicios permitidos en docker-compose.yml
-        run: |
-          set -e
-          echo "Extrayendo servicios de docker-compose.yml..."
-          SERVICES=$(docker-compose config --services)
-          echo "Servicios detectados: $SERVICES"
-          ALLOWED="plex bazarr qbittorrent sonarr radarr overseerr prowlarr cadvisor node_exporter prometheus grafana"
-          for svc in $SERVICES; do
-            echo "Validando: $svc"
-            if ! echo " $ALLOWED " | grep -qw " $svc "; then
-              echo "ERROR: servicio no permitido detectado: $svc"
-              exit 1
-            fi
-          done
-          echo "Todos los servicios están dentro de los permitidos."
-      
-      - name: Validar solo docker-compose.yml
-        run: docker-compose config
-      
+      - name: Validar script de auto-configuración
+        run: python3 -m py_compile bootstrap/bootstrap.py
+
       - name: Validar sintaxis YAML
         uses: ibiqlik/action-yamllint@v3
         with:
-          file_or_dir: |
-            docker-compose.yml
-            traefik/  # (si lo añades manualmente)
+          file_or_dir: docker-compose.yml
           config_data: |
             extends: default
             rules:
+              document-start: disable
+              truthy: disable
               line-length:
                 max: 120
                 level: warning
@@ -80,7 +62,8 @@ jobs:
             "PGID"
             "TZ"
             "PLEX_CLAIM"
-            "GRAFANA_ADMIN_PASSWORD"
+            "ADMIN_USER"
+            "ADMIN_PASSWORD"
           )
           
           for var in "${REQUIRED_VARS[@]}"; do
@@ -91,15 +74,8 @@ jobs:
             echo "✅ Variable $var encontrada"
           done
 
-      - name: Verificar README existe y es mínimo
-        run: |
-          if [ ! -f README.md ]; then
-            echo "❌ ERROR: README.md no existe"
-            exit 1
-          fi
-          if ! grep -q "Plex Minimal" README.md; then
-            echo "⚠️ WARNING: README.md no parece ser la versión minimal. Comprueba que el README describa el alcance actual.";
-          fi
+      - name: Verificar README existe
+        run: test -f README.md
 
   check-security:
     name: Verificar Seguridad

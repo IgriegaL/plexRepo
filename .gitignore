@@ -37,3 +37,9 @@ secrets/
 # Backups encriptados
 *-backups-encrypted/
 *.gpg
+
+# Python
+__pycache__/
+
+# Datos de prueba local
+.localdata/
