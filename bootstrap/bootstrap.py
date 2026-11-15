@@ -364,8 +364,9 @@ def plex(method, path, token, **params):
 
 
 def setup_plex_libraries(token):
-    wait_until("Plex", lambda: plex("GET", "/identity", token))
-    sections = plex("GET", "/library/sections", token)["MediaContainer"].get("Directory", [])
+    # /identity no exige token; /library/sections da 403 hasta que Plex termina de reclamarse
+    sections = wait_until("Plex", lambda: plex("GET", "/library/sections", token))
+    sections = sections["MediaContainer"].get("Directory", [])
     paths = {loc["path"].rstrip("/") for s in sections for loc in s.get("Location", [])}
     libraries = [
         ("Películas", "movie", "tv.plex.agents.movie", "Plex Movie", "/movies"),
