@@ -361,7 +361,9 @@ services:
       - LOG_LEVEL=info
       - TZ=${TZ}
     restart: unless-stopped
-    mem_limit: 800m
+    # Chrome se cae ("tab crashed") con 800m y el /dev/shm de 64 MB por defecto
+    mem_limit: 1536m
+    shm_size: 512m
     cpus: 1.0
     ports:
       - 8191:8191
