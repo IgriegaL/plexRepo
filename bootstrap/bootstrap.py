@@ -364,7 +364,6 @@ def plex(method, path, token, **params):
 
 
 def setup_plex_libraries(token):
-    # /identity no exige token; /library/sections da 403 hasta que Plex termina de reclamarse
     sections = wait_until("Plex", lambda: plex("GET", "/library/sections", token))
     sections = sections["MediaContainer"].get("Directory", [])
     paths = {loc["path"].rstrip("/") for s in sections for loc in s.get("Location", [])}
@@ -376,8 +375,10 @@ def setup_plex_libraries(token):
         if path in paths:
             log(f"Plex: biblioteca para {path} ya existe")
             continue
-        plex("POST", "/library/sections", token, name=name, type=kind, agent=agent,
-             scanner=scanner, language=PLEX_LANGUAGE, location=path)
+        # Recién reclamado, Plex ya permite leer pero da 403 al crear hasta terminar el claim
+        wait_until(f"Plex biblioteca {name}", lambda: plex(
+            "POST", "/library/sections", token, name=name, type=kind, agent=agent,
+            scanner=scanner, language=PLEX_LANGUAGE, location=path) or True)
         log(f"Plex: biblioteca '{name}' creada ({path})")
 
 
