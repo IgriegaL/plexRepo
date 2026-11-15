@@ -41,6 +41,7 @@ QUALITY_PROFILE = ENV("QUALITY_PROFILE", "HD-1080p")
 PLEX_LANGUAGE = ENV("PLEX_LANGUAGE", "es-ES")
 WAIT_TIMEOUT = int(ENV("BOOTSTRAP_WAIT_TIMEOUT", "900"))
 PLEX_WAIT_TIMEOUT = int(ENV("PLEX_WAIT_TIMEOUT", "300"))
+PLEX_ADVERTISE_URL = ENV("PLEX_ADVERTISE_URL", "")  # solo macOS, lo pone setup.sh
 # Indexers públicos que se agregan a Prowlarr la primera vez (definitionName de Prowlarr)
 PROWLARR_INDEXERS = ["extratorrent-st", "kickasstorrents-to", "kickasstorrents-ws",
                      "limetorrents", "thepiratebay", "TorrentsCSV", "uindex", "yts"]
@@ -391,9 +392,19 @@ def plex(method, path, token, **params):
     return request(method, f"http://plex:32400{path}{qs}", {"X-Plex-Token": token})
 
 
+def setup_plex_advertise(token):
+    # Dirección extra que Plex publica en plex.tv para que la encuentren los clientes de la red
+    wait_until("Plex", lambda: plex("PUT", "/:/prefs", token,
+                                     customConnections=PLEX_ADVERTISE_URL) or True)
+    log(f"Plex: anunciado en {PLEX_ADVERTISE_URL}")
+
+
 def setup_plex_libraries(token):
     sections = wait_until("Plex", lambda: plex("GET", "/library/sections", token))
     sections = sections["MediaContainer"].get("Directory", [])
+    # Red de respaldo: si falla el aviso de Sonarr/Radarr, Plex escanea solo cada hora
+    plex("PUT", "/:/prefs", token, ScheduledLibraryUpdatesEnabled=1,
+         ScheduledLibraryUpdateInterval=3600)
     paths = {loc["path"].rstrip("/") for s in sections for loc in s.get("Location", [])}
     libraries = [
         ("Películas", "movie", "tv.plex.agents.movie", "Plex Movie", "/movies"),
@@ -497,6 +508,8 @@ def configure():
     log("Esperando a que Plex esté reclamado (PLEX_CLAIM)...")
     token = step("Plex", wait_until, "Plex (token)", plex_token, PLEX_WAIT_TIMEOUT)
     if token:
+        if PLEX_ADVERTISE_URL:
+            step("Plex dirección", setup_plex_advertise, token)
         step("Plex bibliotecas", setup_plex_libraries, token)
         for arr in (sonarr, radarr):
             if arr:

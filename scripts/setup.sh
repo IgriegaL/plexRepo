@@ -45,7 +45,11 @@ start_colima() {
     cpus=$(( cpus >= 8 ? cpus / 2 : (cpus >= 4 ? 4 : cpus) ))
     mem=$(( mem >= 16 ? 8 : (mem / 2 > 4 ? mem / 2 : 4) ))
     log "Iniciando Colima (${cpus} CPU / ${mem} GB RAM)..."
+    # --network-preferred-route: el tráfico sale por la red nativa de macOS; con la red
+    # por defecto (en espacio de usuario) una descarga de qBittorrent deja sin internet
+    # a Plex y al resto
     colima start --cpu "$cpus" --memory "$mem" --disk 60 --vm-type vz --mount-type virtiofs \
+        --network-address --network-preferred-route \
         || colima start --cpu "$cpus" --memory "$mem" --disk 60
 }
 
@@ -156,6 +160,19 @@ if ! $GREP -qs 'PlexOnlineToken=' "$PREFS"; then
     fi
 fi
 
+if [ "$OS" = Darwin ]; then
+    IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)
+    # Plex corre en la VM de Colima y solo anuncia IPs internas: sin esto el
+    # Apple TV / la TV lo ven "no disponible"
+    if [ -n "$IP" ]; then
+        set_env PLEX_ADVERTISE_URL "http://$IP:32400"
+        export PLEX_ADVERTISE_URL="http://$IP:32400"
+    fi
+else
+    IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+fi
+IP=${IP:-localhost}
+
 # --- Arranque ---
 log "Descargando imágenes..."
 $DOCKER compose pull --quiet
@@ -166,12 +183,6 @@ log "Auto-configuración en curso (puede tardar unos minutos la primera vez)..."
 $DOCKER logs -f bootstrap || true
 STATUS=$($DOCKER inspect -f '{{.State.ExitCode}}' bootstrap)
 
-if [ "$OS" = Darwin ]; then
-    IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)
-else
-    IP=$(hostname -I 2>/dev/null | awk '{print $1}')
-fi
-IP=${IP:-localhost}
 cat <<EOF
 
 ================================================================
