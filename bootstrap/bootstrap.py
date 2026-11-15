@@ -41,6 +41,9 @@ QUALITY_PROFILE = ENV("QUALITY_PROFILE", "HD-1080p")
 PLEX_LANGUAGE = ENV("PLEX_LANGUAGE", "es-ES")
 WAIT_TIMEOUT = int(ENV("BOOTSTRAP_WAIT_TIMEOUT", "900"))
 PLEX_WAIT_TIMEOUT = int(ENV("PLEX_WAIT_TIMEOUT", "300"))
+# Indexers públicos que se agregan a Prowlarr la primera vez (definitionName de Prowlarr)
+PROWLARR_INDEXERS = ["extratorrent-st", "kickasstorrents-to", "kickasstorrents-ws",
+                     "limetorrents", "thepiratebay", "TorrentsCSV", "uindex", "yts"]
 
 CFG = "/cfg"  # volúmenes de configuración montados aquí (ver docker-compose.yml)
 
@@ -279,10 +282,9 @@ def pick_profile(arr):
 # ---------------------------------------------------------------------- Prowlarr
 def setup_prowlarr(prowlarr, sonarr, radarr):
     # FlareSolverr como proxy (se aplica a indexers con la etiqueta 'flaresolverr')
+    tag = next((t for t in prowlarr.get("tag") if t["label"] == "flaresolverr"), None) \
+        or prowlarr.post("tag", {"label": "flaresolverr"})
     if not any(p.get("implementation") == "FlareSolverr" for p in prowlarr.get("indexerProxy")):
-        tags = prowlarr.get("tag")
-        tag = next((t for t in tags if t["label"] == "flaresolverr"), None) \
-            or prowlarr.post("tag", {"label": "flaresolverr"})
         item = fill_schema(schema_for(prowlarr, "indexerProxy", "FlareSolverr"),
                            {"host": "http://flaresolverr:8191/", "requestTimeout": 60})
         item.update({"name": "FlareSolverr", "tags": [tag["id"]]})
@@ -291,6 +293,32 @@ def setup_prowlarr(prowlarr, sonarr, radarr):
         log("Prowlarr: FlareSolverr agregado (usa la etiqueta 'flaresolverr' en indexers con Cloudflare)")
     else:
         log("Prowlarr: FlareSolverr ya configurado")
+
+    # Indexers públicos por defecto, solo en un Prowlarr sin indexers (respeta los que borres)
+    if prowlarr.get("indexer"):
+        log("Prowlarr: ya tiene indexers, no se agregan los de por defecto")
+    else:
+        profile = prowlarr.get("appprofile")[0]["id"]
+        # La primera vez Prowlarr descarga las definiciones y tarda más que el timeout
+        schemas = wait_until("Prowlarr (definiciones)", lambda: prowlarr.get("indexer/schema"))
+        schemas = {s.get("definitionName"): s for s in schemas}
+        for name in PROWLARR_INDEXERS:
+            item = schemas.get(name)
+            if not item:
+                warn(f"Prowlarr: no existe el indexer '{name}'")
+                continue
+            cloudflare = any(f["name"] == "info_flaresolverr" for f in item["fields"])
+            enable = item["enable"]
+            item.update({"appProfileId": profile, "enable": False,
+                         "tags": [tag["id"]] if cloudflare else []})
+            # Prowlarr prueba el sitio al crear un indexer activo y lo rechaza si tarda
+            # (forceSave no lo evita al crear): se crea apagado y se activa sin probar
+            created = step(f"Prowlarr indexer {name}", prowlarr.post, "indexer", item)
+            if created and enable:
+                created["enable"] = True
+                step(f"Prowlarr indexer {name}", prowlarr.put,
+                     f"indexer/{created['id']}?forceSave=true", created)
+        log(f"Prowlarr: indexers por defecto agregados ({', '.join(PROWLARR_INDEXERS)})")
 
     for app in (sonarr, radarr):
         if any(a.get("implementation") == app.name for a in prowlarr.get("applications")):
