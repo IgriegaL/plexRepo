@@ -114,7 +114,12 @@ if [ ! -f .env ]; then
     if [ "$OS" = Darwin ] || [ ! -d /mnt/DiscoDuro ]; then
         sed -i.tmp "s|/mnt/DiscoDuro|$REAL_HOME/plex-stack/media|" .env && rm -f .env.tmp
     fi
-    log ".env creado. Rutas: $(get_env PLEX_CONFIG_VOLUME | xargs dirname) y $(get_env MOVIES_VOLUME | xargs dirname)"
+    log ".env creado. Rutas: $(get_env PLEX_CONFIG_VOLUME | xargs dirname) y $(get_env MEDIA_VOLUME)"
+fi
+# .env antiguo (TV_SERIES/MOVIES/DOWNLOADS_VOLUME por separado): pasar a MEDIA_VOLUME
+if [ -z "$(get_env MEDIA_VOLUME)" ] && [ -n "$(get_env MOVIES_VOLUME)" ]; then
+    set_env MEDIA_VOLUME "$(dirname "$(get_env MOVIES_VOLUME)")"
+    log "MEDIA_VOLUME=$(get_env MEDIA_VOLUME) (antes: carpetas de medios por separado)"
 fi
 if [ -z "$(get_env ADMIN_PASSWORD)" ]; then
     set_env ADMIN_PASSWORD "$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 20)"
@@ -133,15 +138,17 @@ set -a; source .env; set +a
 
 # --- Carpetas ---
 log "Creando carpetas..."
+MEDIA_DIRS=("$MEDIA_VOLUME/movies" "$MEDIA_VOLUME/tvserie" "$MEDIA_VOLUME/downloads" "$MEDIA_VOLUME/downloads/incomplete")
 for var in $(grep -oE '^[A-Z_]+_VOLUME' .env); do
     dir="${!var}"
     [ -n "$dir" ] && priv mkdir -p "$dir"
 done
-priv mkdir -p "$DOWNLOADS_VOLUME/incomplete"
+priv mkdir -p "${MEDIA_DIRS[@]}"
 for var in $(grep -oE '^[A-Z_]+_VOLUME' .env); do
     dir="${!var}"
     [ -n "$dir" ] && priv chown "$PUID:$PGID" "$dir"
 done
+priv chown "$PUID:$PGID" "${MEDIA_DIRS[@]}"
 
 # --- Plex claim (solo la primera vez) ---
 PREFS="$PLEX_CONFIG_VOLUME/Library/Application Support/Plex Media Server/Preferences.xml"

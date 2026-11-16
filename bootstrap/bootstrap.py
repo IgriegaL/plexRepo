@@ -47,8 +47,20 @@ PROWLARR_INDEXERS = ["extratorrent-st", "kickasstorrents-to", "kickasstorrents-w
                      "limetorrents", "thepiratebay", "TorrentsCSV", "uindex", "yts"]
 
 CFG = "/cfg"  # volúmenes de configuración montados aquí (ver docker-compose.yml)
+# Todo el contenido bajo un solo montaje (/data) para que Sonarr/Radarr importen con
+# hardlinks en vez de copiar (si no, cada película ocupa el doble de disco)
+MOVIES_DIR, TV_DIR, DOWNLOADS_DIR = "/data/movies", "/data/tvserie", "/data/downloads"
+OLD_PATHS = {"/movies": MOVIES_DIR, "/tv": TV_DIR, "/downloads": DOWNLOADS_DIR}
 
 warnings = []
+
+
+def new_path(path):
+    """Ruta de antes de /data (/movies, /tv, /downloads) -> su equivalente actual."""
+    for old, new in OLD_PATHS.items():
+        if path == old or path.startswith(old + "/"):
+            return new + path[len(old):]
+    return path
 
 
 def log(msg):
@@ -134,9 +146,11 @@ def init_qbittorrent():
             ini.set(section, key, value)
 
     setdefault("LegalNotice", "Accepted", "true")
-    setdefault("BitTorrent", "Session\\DefaultSavePath", "/downloads/")
+    setdefault("BitTorrent", "Session\\DefaultSavePath", f"{DOWNLOADS_DIR}/")
     setdefault("BitTorrent", "Session\\TempPathEnabled", "true")
-    setdefault("BitTorrent", "Session\\TempPath", "/downloads/incomplete/")
+    setdefault("BitTorrent", "Session\\TempPath", f"{DOWNLOADS_DIR}/incomplete/")
+    for key in ("Session\\DefaultSavePath", "Session\\TempPath"):
+        ini.set("BitTorrent", key, new_path(ini.get("BitTorrent", key)))
     setdefault("BitTorrent", "Session\\Port", ENV("TORRENTING_PORT", "6881"))
     setdefault("Preferences", "WebUI\\Port", str(QBIT_PORT))
     setdefault("Preferences", "WebUI\\Username", ADMIN_USER)
@@ -237,11 +251,23 @@ def setup_auth(arr):
 
 
 def setup_root_folder(arr, path):
-    if any(r["path"].rstrip("/") == path for r in arr.get("rootfolder")):
+    roots = arr.get("rootfolder")
+    if any(r["path"].rstrip("/") == path for r in roots):
         log(f"{arr.name}: carpeta raíz {path} ya existe")
-        return
-    arr.post("rootfolder", {"path": path})
-    log(f"{arr.name}: carpeta raíz {path} agregada")
+    else:
+        arr.post("rootfolder", {"path": path})
+        log(f"{arr.name}: carpeta raíz {path} agregada")
+    # Migración: lo que estaba en la carpeta raíz antigua (/movies, /tv) pasa a /data
+    kind, ids_key = ("movie", "movieIds") if arr.name == "Radarr" else ("series", "seriesIds")
+    for old in roots:
+        old_path = old["path"].rstrip("/")
+        if old_path == path or new_path(old_path) != path:
+            continue
+        ids = [x["id"] for x in arr.get(kind) if new_path(x["path"]) != x["path"]]
+        if ids:  # moveFiles=False: los archivos ya están ahí, solo cambia la ruta guardada
+            arr.put(f"{kind}/editor", {ids_key: ids, "rootFolderPath": path, "moveFiles": False})
+        arr.call("DELETE", f"rootfolder/{old['id']}")
+        log(f"{arr.name}: {len(ids)} elemento(s) pasados de {old_path} a {path}")
 
 
 def setup_download_client(arr, category_field, category):
@@ -405,10 +431,18 @@ def setup_plex_libraries(token):
     # Red de respaldo: si falla el aviso de Sonarr/Radarr, Plex escanea solo cada hora
     plex("PUT", "/:/prefs", token, ScheduledLibraryUpdatesEnabled=1,
          ScheduledLibraryUpdateInterval=3600)
-    paths = {loc["path"].rstrip("/") for s in sections for loc in s.get("Location", [])}
+    paths = set()
+    for s in sections:
+        for loc in s.get("Location", []):
+            old = loc["path"].rstrip("/")
+            if new_path(old) != old:  # migración a /data
+                plex("PUT", f"/library/sections/{s['key']}", token, agent=s["agent"],
+                     language=s["language"], location=new_path(old))
+                log(f"Plex: biblioteca '{s['title']}' pasada de {old} a {new_path(old)}")
+            paths.add(new_path(old))
     libraries = [
-        ("Películas", "movie", "tv.plex.agents.movie", "Plex Movie", "/movies"),
-        ("Series", "show", "tv.plex.agents.series", "Plex TV Series", "/tv"),
+        ("Películas", "movie", "tv.plex.agents.movie", "Plex Movie", MOVIES_DIR),
+        ("Series", "show", "tv.plex.agents.series", "Plex TV Series", TV_DIR),
     ]
     for name, kind, agent, scanner, path in libraries:
         if path in paths:
@@ -449,12 +483,19 @@ def setup_overseerr(token, sonarr, radarr):
         log("Overseerr: bibliotecas de Plex habilitadas")
 
     for arr, path, extra in (
-        (sonarr, "/tv", {"enableSeasonFolders": True, "activeAnimeProfileId": None,
-                         "activeAnimeDirectory": None, "animeTags": []}),
-        (radarr, "/movies", {"minimumAvailability": "released"}),
+        (sonarr, TV_DIR, {"enableSeasonFolders": True, "activeAnimeProfileId": None,
+                          "activeAnimeDirectory": None, "animeTags": []}),
+        (radarr, MOVIES_DIR, {"minimumAvailability": "released"}),
     ):
         resource = f"settings/{arr.name.lower()}"
-        if call("GET", resource):
+        existing = call("GET", resource)
+        if existing:
+            for srv in existing:  # migración a /data
+                if new_path(srv["activeDirectory"]) != srv["activeDirectory"]:
+                    srv["activeDirectory"] = new_path(srv["activeDirectory"])
+                    call("PUT", f"{resource}/{srv['id']}",
+                         {k: v for k, v in srv.items() if k != "id"})
+                    log(f"Overseerr: {arr.name} ahora guarda en {srv['activeDirectory']}")
             log(f"Overseerr: {arr.name} ya configurado")
             continue
         profile = pick_profile(arr)
@@ -470,6 +511,26 @@ def setup_overseerr(token, sonarr, radarr):
     if not public.get("initialized"):
         call("POST", "settings/initialize")
         log("Overseerr: asistente inicial completado")
+
+
+# ------------------------------------------------------------------- qBittorrent
+def migrate_qbit_torrents():
+    """Torrents guardados en /downloads (antes de /data) -> /data/downloads."""
+    base = f"http://qbittorrent:{QBIT_PORT}/api/v2"
+    jar = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    # v5 responde 204 vacío (o 401) y las anteriores "Ok."/"Fails."
+    wait_until("qBittorrent", lambda: request(
+        "POST", f"{base}/auth/login", form={"username": ADMIN_USER, "password": ADMIN_PASSWORD},
+        opener=jar) != "Fails.")
+    moved = 0
+    for t in request("GET", f"{base}/torrents/info", opener=jar):
+        old = t["save_path"].rstrip("/")
+        if new_path(old) != old:
+            request("POST", f"{base}/torrents/setLocation", opener=jar,
+                    form={"hashes": t["hash"], "location": new_path(old)})
+            moved += 1
+    if moved:
+        log(f"qBittorrent: {moved} torrent(s) pasados a {DOWNLOADS_DIR}")
 
 
 # -------------------------------------------------------------------------- main
@@ -489,8 +550,10 @@ def configure():
     radarr = step("Radarr", Arr("Radarr", "radarr", 7878, "v3", f"{CFG}/radarr").load_key)
     prowlarr = step("Prowlarr", Arr("Prowlarr", "prowlarr", 9696, "v1", f"{CFG}/prowlarr").load_key)
 
-    for arr, path, cat_field, cat in ((sonarr, "/tv", "tvCategory", "tv-sonarr"),
-                                      (radarr, "/movies", "movieCategory", "radarr")):
+    if ADMIN_PASSWORD:
+        step("qBittorrent torrents", migrate_qbit_torrents)
+    for arr, path, cat_field, cat in ((sonarr, TV_DIR, "tvCategory", "tv-sonarr"),
+                                      (radarr, MOVIES_DIR, "movieCategory", "radarr")):
         if not arr:
             continue
         step(f"{arr.name} auth", setup_auth, arr)

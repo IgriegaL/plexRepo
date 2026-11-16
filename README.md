@@ -46,9 +46,9 @@ cd plexRepo
 ```
  Overseerr ──pide──▶ Sonarr / Radarr ──busca en──▶ Prowlarr ──▶ indexers (vía FlareSolverr si hay Cloudflare)
                           │
-                          ├──envía torrent──▶ qBittorrent ──descarga──▶ /downloads
+                          ├──envía torrent──▶ qBittorrent ──descarga──▶ /data/downloads
                           │
-                          ├──importa/renombra──▶ /tv  ·  /movies
+                          ├──importa/renombra (hardlink)──▶ /data/tvserie  ·  /data/movies
                           │
                           └──avisa──▶ Plex (refresca la biblioteca) ──▶ Tautulli (estadísticas)
 
@@ -102,7 +102,7 @@ La primera vez tarda unos minutos (descarga ~5 GB de imágenes). Al final verás
 
 ```
 [BOOTSTRAP] Sonarr: login configurado (usuario 'admin')
-[BOOTSTRAP] Sonarr: carpeta raíz /tv agregada
+[BOOTSTRAP] Sonarr: carpeta raíz /data/tvserie agregada
 [BOOTSTRAP] Sonarr: qBittorrent agregado (downloadclient)
 ...
 [BOOTSTRAP] Overseerr: asistente inicial completado
@@ -146,7 +146,7 @@ Hay dos contenedores que corren una vez y terminan. Los dos son **idempotentes**
 Prepara `qBittorrent.conf` para evitar la contraseña temporal que qBittorrent muestra en los logs:
 
 - Usuario y contraseña de la WebUI = `ADMIN_USER` / `ADMIN_PASSWORD` (hash PBKDF2)
-- Descargas en `/downloads/`, incompletas en `/downloads/incomplete/`
+- Descargas en `/data/downloads/`, incompletas en `/data/downloads/incomplete/`
 - Acepta el aviso legal y desactiva la validación de host (para entrar vía Caddy)
 
 Si qBittorrent ya tiene contraseña, **no la cambia**.
@@ -157,11 +157,11 @@ Lee la API key de cada app desde sus propios archivos de configuración (`config
 
 | Servicio | Qué configura |
 | :--- | :--- |
-| **Sonarr** | Login (formulario, usuario `admin`) · carpeta raíz `/tv` · qBittorrent (categoría `tv-sonarr`) · notificación a Plex para refrescar la biblioteca al importar |
-| **Radarr** | Login · carpeta raíz `/movies` · qBittorrent (categoría `radarr`) · notificación a Plex |
+| **Sonarr** | Login (formulario, usuario `admin`) · carpeta raíz `/data/tvserie` · qBittorrent (categoría `tv-sonarr`) · notificación a Plex para refrescar la biblioteca al importar |
+| **Radarr** | Login · carpeta raíz `/data/movies` · qBittorrent (categoría `radarr`) · notificación a Plex |
 | **Prowlarr** | Login · FlareSolverr como proxy (etiqueta `flaresolverr`) · sincronización completa con Sonarr y Radarr |
 | **Bazarr** | Conexión con Sonarr y Radarr |
-| **Plex** | Bibliotecas **Películas** (`/movies`) y **Series** (`/tv`) |
+| **Plex** | Bibliotecas **Películas** (`/data/movies`) y **Series** (`/data/tvserie`) |
 | **Overseerr** | Inicia sesión con la cuenta dueña de Plex (queda como admin) · conecta Plex y habilita bibliotecas · agrega Sonarr y Radarr con el perfil `QUALITY_PROFILE` · completa el asistente inicial |
 
 Si algún paso falla, el resto sigue y al final muestra un resumen de advertencias. En ese caso el contenedor termina con código 1.
@@ -276,7 +276,7 @@ docker compose down                   # detener todo (los datos se conservan)
 | `QUALITY_PROFILE` | `HD-1080p` | Perfil que Overseerr usa por defecto en Sonarr/Radarr |
 | `PLEX_LANGUAGE` | `es-ES` | Idioma de metadatos de las bibliotecas creadas |
 | `*_CONFIG_VOLUME` | `/mnt/nvme/docker-volumes/<app>` o `~/plex-stack/config/<app>` | Configuración de cada app (mejor en SSD) |
-| `TV_SERIES_VOLUME` · `MOVIES_VOLUME` · `DOWNLOADS_VOLUME` | `/mnt/DiscoDuro/...` o `~/plex-stack/media/...` | Medios y descargas |
+| `MEDIA_VOLUME` | `/mnt/DiscoDuro` o `~/plex-stack/media` | Medios y descargas (`movies/`, `tvserie/`, `downloads/`), montado como `/data` en todos los servicios para que las importaciones sean hardlinks y no copias |
 | `COMPOSE_FILE` | Lo define `setup.sh` | Agrega `docker-compose.no-gpu.yml` si no hay `/dev/dri` |
 | `NETDATA_CLAIM_TOKEN` | — | Opcional, para vincular Netdata Cloud |
 
